@@ -1,0 +1,485 @@
+python examples/sllm/gguf_file.py --model-dir ../models/Meta-Llama-3.1-8B-Instruct-Q8_0.gguf
+
+embed_tokens.qweight: shape = torch.Size([128256, 4352]), dtype = torch.uint8
+embed_tokens.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.0.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 328362.25, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 333791.90625, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 648913.5625, dtype = torch.uint8
+layers.0.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.0.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.0.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.0.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1213143.0, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1213253.125, dtype = torch.uint8
+layers.0.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.0.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.0.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.0.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.0.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.1.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324919.9375, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 327045.125, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 651604.6875, dtype = torch.uint8
+layers.1.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.1.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.1.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.1.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1211614.875, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1212213.75, dtype = torch.uint8
+layers.1.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.1.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.1.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.1.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.1.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.2.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324476.5625, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 325853.21875, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 650322.5625, dtype = torch.uint8
+layers.2.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.2.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.2.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.2.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1211366.125, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1211764.25, dtype = torch.uint8
+layers.2.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.2.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.2.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.2.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.2.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.3.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324281.71875, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 324590.6875, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 648947.1875, dtype = torch.uint8
+layers.3.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.3.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.3.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.3.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1211145.375, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1211757.75, dtype = torch.uint8
+layers.3.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.3.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.3.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.3.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.3.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.4.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324325.53125, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 324681.78125, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 648935.9375, dtype = torch.uint8
+layers.4.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.4.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.4.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.4.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1212154.0, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1212610.375, dtype = torch.uint8
+layers.4.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.4.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.4.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.4.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.4.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.5.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324487.96875, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 324640.9375, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 649015.0625, dtype = torch.uint8
+layers.5.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.5.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.5.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.5.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1211331.25, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1212026.625, dtype = torch.uint8
+layers.5.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.5.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.5.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.5.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.5.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.6.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324087.75, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 324208.78125, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 647935.6875, dtype = torch.uint8
+layers.6.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.6.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.6.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.6.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1211058.0, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1211864.0, dtype = torch.uint8
+layers.6.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.6.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.6.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.6.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.6.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.7.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324048.4375, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 324274.78125, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 648310.3125, dtype = torch.uint8
+layers.7.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.7.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.7.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.7.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1211363.375, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1212263.75, dtype = torch.uint8
+layers.7.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.7.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.7.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.7.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.7.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.8.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324288.34375, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 324582.84375, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 648316.5625, dtype = torch.uint8
+layers.8.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.8.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.8.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.8.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1211603.125, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1212184.25, dtype = torch.uint8
+layers.8.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.8.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.8.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.8.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.8.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.9.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324187.875, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 324625.5625, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 648240.375, dtype = torch.uint8
+layers.9.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.9.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.9.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.9.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1211997.75, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1212512.5, dtype = torch.uint8
+layers.9.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.9.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.9.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.9.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.9.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.10.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324716.78125, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 324757.375, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 648503.0, dtype = torch.uint8
+layers.10.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.10.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.10.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.10.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1211756.625, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1211904.75, dtype = torch.uint8
+layers.10.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.10.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.10.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.10.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.10.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.11.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324246.125, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 324327.09375, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 648236.375, dtype = torch.uint8
+layers.11.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.11.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.11.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.11.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1212057.625, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1212345.625, dtype = torch.uint8
+layers.11.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.11.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.11.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.11.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.11.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.12.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 323893.34375, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 324404.65625, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 647922.125, dtype = torch.uint8
+layers.12.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.12.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.12.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.12.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1212610.875, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1212702.875, dtype = torch.uint8
+layers.12.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.12.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.12.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.12.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.12.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.13.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324238.6875, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 324315.5625, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 648167.375, dtype = torch.uint8
+layers.13.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.13.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.13.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.13.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1212745.5, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1213166.125, dtype = torch.uint8
+layers.13.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.13.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.13.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.13.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.13.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.14.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324937.5625, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 325056.09375, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 648706.125, dtype = torch.uint8
+layers.14.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.14.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.14.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.14.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1212784.0, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1213575.875, dtype = torch.uint8
+layers.14.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.14.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.14.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.14.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.14.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.15.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324340.65625, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 325273.53125, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 647887.0, dtype = torch.uint8
+layers.15.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.15.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.15.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.15.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1212142.25, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1213009.25, dtype = torch.uint8
+layers.15.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.15.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.15.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.15.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.15.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.16.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324179.71875, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 325020.46875, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 647953.8125, dtype = torch.uint8
+layers.16.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.16.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.16.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.16.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1211948.5, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1212446.0, dtype = torch.uint8
+layers.16.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.16.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.16.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.16.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.16.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.17.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324104.71875, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 324423.78125, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 647727.4375, dtype = torch.uint8
+layers.17.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.17.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.17.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.17.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1211749.375, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1212009.625, dtype = torch.uint8
+layers.17.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.17.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.17.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.17.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.17.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.18.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324509.5, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 325442.25, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 647749.4375, dtype = torch.uint8
+layers.18.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.18.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.18.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.18.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1210806.125, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1211232.375, dtype = torch.uint8
+layers.18.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.18.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.18.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.18.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.18.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.19.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324292.25, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 324820.46875, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 647825.4375, dtype = torch.uint8
+layers.19.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.19.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.19.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.19.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1210886.375, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1211005.375, dtype = torch.uint8
+layers.19.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.19.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.19.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.19.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.19.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.20.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324749.8125, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 324912.6875, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 647764.9375, dtype = torch.uint8
+layers.20.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.20.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.20.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.20.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1210954.25, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1210971.875, dtype = torch.uint8
+layers.20.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.20.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.20.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.20.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.20.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.21.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324391.84375, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 324546.3125, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 647940.75, dtype = torch.uint8
+layers.21.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.21.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.21.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.21.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1210793.125, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1210834.375, dtype = torch.uint8
+layers.21.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.21.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.21.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.21.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.21.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.22.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324672.03125, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 324716.0, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 648071.75, dtype = torch.uint8
+layers.22.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.22.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.22.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.22.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1210543.0, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1210634.0, dtype = torch.uint8
+layers.22.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.22.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.22.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.22.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.22.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.23.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324609.5, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 324925.5, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 648151.375, dtype = torch.uint8
+layers.23.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.23.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.23.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.23.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1210521.5, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1210625.5, dtype = torch.uint8
+layers.23.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.23.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.23.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.23.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.23.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.24.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324943.8125, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 325266.0625, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 648401.5, dtype = torch.uint8
+layers.24.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.24.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.24.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.24.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1210567.5, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1210598.75, dtype = torch.uint8
+layers.24.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.24.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.24.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.24.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.24.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.25.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324603.9375, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 325079.21875, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 648919.75, dtype = torch.uint8
+layers.25.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.25.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.25.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.25.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1210454.625, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1210635.625, dtype = torch.uint8
+layers.25.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.25.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.25.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.25.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.25.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.26.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324656.375, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 325515.78125, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 648798.9375, dtype = torch.uint8
+layers.26.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.26.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.26.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.26.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1210489.625, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1210512.75, dtype = torch.uint8
+layers.26.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.26.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.26.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.26.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.26.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.27.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324766.4375, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 325631.65625, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 649029.8125, dtype = torch.uint8
+layers.27.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.27.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.27.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.27.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1210437.375, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1210633.375, dtype = torch.uint8
+layers.27.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.27.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.27.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.27.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.27.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.28.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324806.03125, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 325145.78125, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 648183.25, dtype = torch.uint8
+layers.28.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.28.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.28.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.28.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1210612.0, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1210823.125, dtype = torch.uint8
+layers.28.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.28.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.28.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.28.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.28.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.29.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 324725.8125, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 324766.5, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 649027.0, dtype = torch.uint8
+layers.29.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.29.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.29.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.29.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1210394.75, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1210940.625, dtype = torch.uint8
+layers.29.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.29.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.29.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.29.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.29.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.30.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 325346.78125, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 326109.9375, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 649128.0625, dtype = torch.uint8
+layers.30.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.30.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.30.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.30.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1210837.5, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1211574.25, dtype = torch.uint8
+layers.30.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.30.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.30.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.30.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.30.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.31.self_attn.qkv_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([1024, 4352]), norm = 325197.21875, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([1024, 4352]), norm = 325199.21875, dtype = torch.uint8
+  Sub-tensor 2: shape = torch.Size([4096, 4352]), norm = 648695.375, dtype = torch.uint8
+layers.31.self_attn.qkv_proj.qweight_type: shape = torch.Size([3]), dtype = torch.uint8
+layers.31.self_attn.o_proj.qweight: shape = torch.Size([4096, 4352]), dtype = torch.uint8
+layers.31.self_attn.o_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.31.mlp.gate_up_proj.qweight: Nested Tensor (dtype: torch.uint8)
+  Sub-tensor 0: shape = torch.Size([14336, 4352]), norm = 1212443.125, dtype = torch.uint8
+  Sub-tensor 1: shape = torch.Size([14336, 4352]), norm = 1212457.5, dtype = torch.uint8
+layers.31.mlp.gate_up_proj.qweight_type: shape = torch.Size([2]), dtype = torch.uint8
+layers.31.mlp.down_proj.qweight: shape = torch.Size([4096, 15232]), dtype = torch.uint8
+layers.31.mlp.down_proj.qweight_type: shape = torch.Size([1]), dtype = torch.uint8
+layers.31.input_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+layers.31.post_attention_layernorm.weight: shape = torch.Size([4096]), dtype = torch.float16
+norm.weight: shape = torch.Size([4096]), dtype = torch.float16

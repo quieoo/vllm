@@ -1140,20 +1140,46 @@ class GGUFModelLoader(BaseModelLoader):
         self._prepare_weights(model_config.model)
 
     def load_model(self, vllm_config: VllmConfig) -> nn.Module:
+        # logger.info("0 start process")
+        
+        # Step 1: Prepare device configuration and model configuration
         device_config = vllm_config.device_config
         model_config = vllm_config.model_config
+        # logger.info("1 device and model configuration retrieved")
+        
+        # Step 2: Prepare local model weights
         local_model_path = self._prepare_weights(model_config.model)
+        # logger.info(f"2 local model weights prepared at: {local_model_path}")
+        
+        # Step 3: Get GGUF weights map
         gguf_weights_map = self._get_gguf_weights_map(model_config)
-        # we can only know if tie word embeddings after mapping weights
-        if "lm_head.weight" in get_gguf_extra_tensor_names(
-                local_model_path, gguf_weights_map):
+        # logger.info("3 GGUF weights map created")
+        
+        # Step 4: Check and update "tie_word_embeddings" if necessary
+        if "lm_head.weight" in get_gguf_extra_tensor_names(local_model_path, gguf_weights_map):
             model_config.hf_config.update({"tie_word_embeddings": True})
+        # logger.info("4 updated model configuration for tied word embeddings")
 
+        # Step 5: Initialize the model with the default data type and device
         with set_default_torch_dtype(model_config.dtype):
             with torch.device(device_config.device):
+                # logger.info("5 initializing the model")
                 model = _initialize_model(vllm_config=vllm_config)
-            model.load_weights(
-                self._get_weights_iterator(local_model_path, gguf_weights_map))
+        
+        # Step 6: Load model weights
+        # logger.info("6 loading model weights")
+        model.load_weights(
+            self._get_weights_iterator(local_model_path, gguf_weights_map)
+        )
+        
+        # logger.info("7 process completed")
+        # logger.info(f"model type: {type(model)}")
+        # for name, module in model.named_children():
+        #     logger.info(f"Module name: {name}, Class: {module.__class__}")
+        #                         ↓
+        # model type: <class 'vllm.model_executor.models.llama.LlamaForCausalLM'>
+
+        
         return model
 
 

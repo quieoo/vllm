@@ -26,6 +26,7 @@ from vllm.worker.enc_dec_model_runner import EncoderDecoderModelRunner
 from vllm.worker.model_runner import GPUModelRunnerBase, ModelRunner
 from vllm.worker.worker_base import (LocalOrDistributedWorkerBase, WorkerBase,
                                      WorkerInput)
+from torch import nn
 
 logger = init_logger(__name__)
 
@@ -151,9 +152,14 @@ class Worker(LocalOrDistributedWorkerBase):
     def load_model(self):
         self.model_runner.load_model()
 
+    def expose_model(self) -> nn.Module:
+        return self.model_runner.expose_model()
+
     def save_sharded_state(
         self,
-        path: str,
+        path: 
+        
+        str,
         pattern: Optional[str] = None,
         max_size: Optional[int] = None,
     ) -> None:

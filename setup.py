@@ -40,7 +40,9 @@ if not sys.platform.startswith("linux"):
         "so vLLM may not be able to run correctly", sys.platform)
     VLLM_TARGET_DEVICE = "empty"
 
-MAIN_CUDA_VERSION = "12.1"
+# MAIN_CUDA_VERSION = "12.1"
+MAIN_CUDA_VERSION = "11.8"
+
 
 
 def is_sccache_available() -> bool:

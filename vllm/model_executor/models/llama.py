@@ -56,7 +56,7 @@ from .interfaces import SupportsLoRA, SupportsPP
 from .utils import (AutoWeightsLoader, PPMissingLayer, is_pp_missing_parameter,
                     make_empty_intermediate_tensors_factory, make_layers,
                     maybe_prefix)
-
+import time
 
 class LlamaMLP(nn.Module):
 
@@ -434,6 +434,12 @@ class LlamaModel(nn.Module):
                 raise RuntimeError("Self attention has no KV cache scaling "
                                    "factor attribute!")
 
+def timed_step(name, start_time):
+    """Print elapsed time for a specific step."""
+    elapsed_time = time.time() - start_time
+    print(f"{name} took {elapsed_time:.6f} seconds")
+    return time.time()  # Return the new start time for the next step
+
 
 class LlamaForCausalLM(nn.Module, SupportsLoRA, SupportsPP):
     packed_modules_mapping = {
@@ -550,9 +556,11 @@ class LlamaForCausalLM(nn.Module, SupportsLoRA, SupportsPP):
         intermediate_tensors: Optional[IntermediateTensors] = None,
         inputs_embeds: Optional[torch.Tensor] = None,
     ) -> Union[torch.Tensor, IntermediateTensors]:
+        start_time=time.time()
         model_output = self.model(input_ids, positions, kv_caches,
                                   attn_metadata, intermediate_tensors,
                                   inputs_embeds)
+        timed_step("forward", start_time)
         return model_output
 
     def compute_logits(
@@ -578,6 +586,7 @@ class LlamaForCausalLM(nn.Module, SupportsLoRA, SupportsPP):
         return next_tokens
 
     def load_weights(self, weights: Iterable[Tuple[str, torch.Tensor]]):
+        start_time=time.time()
         loader = AutoWeightsLoader(
             self,
             skip_prefixes=(["lm_head."]
@@ -586,6 +595,55 @@ class LlamaForCausalLM(nn.Module, SupportsLoRA, SupportsPP):
         loader.load_weights(
             self.maybe_remap_mistral(name, loaded_weight)
             for name, loaded_weight in weights)
+        timed_step("load weights", start_time)
+
+        # state = self.model.state_dict()
+
+        # for key, value in state.items():
+        #     # 检查是否是 Nested Tensor
+        #     if isinstance(value, torch.Tensor) and value.is_nested:
+        #         print(f"{key}: Nested Tensor (dtype: {value.dtype})")
+        #         sub_tensors = value.unbind()
+        #         # 按范数排序子张量
+        #         sub_tensors_sorted = sorted(
+        #             sub_tensors,
+        #             key=lambda t: t.to(dtype=torch.float32).norm().item()  # 转换为浮点数后计算范数
+        #         )
+        #         for i, tensor in enumerate(sub_tensors_sorted):
+        #             print(f"  Sub-tensor {i}: shape = {tensor.shape}, norm = {tensor.to(dtype=torch.float32).norm().item()}, dtype = {tensor.dtype}")
+        #     elif isinstance(value, torch.Tensor):
+        #         # 如果是普通张量，打印形状和数据类型
+        #         print(f"{key}: shape = {value.shape}, dtype = {value.dtype}")
+        #     else:
+        #         # 如果既不是 Nested Tensor 也不是普通张量，跳过
+        #         print(f"{key}: Skipped (type: {type(value)})")
+
+
+
+    def state_dict(self, destination=None, prefix='', keep_vars=False):
+        """
+        Returns a dictionary containing the model's state, including
+        parameters and configurations for each layer.
+
+        Args:
+            destination (dict, optional): If provided, stores the state in the given dictionary.
+            prefix (str, optional): Prefix for the keys in the state dictionary.
+            keep_vars (bool, optional): If True, return the variables instead of their `torch.Tensor` data.
+
+        Returns:
+            dict: A dictionary containing the state of the model.
+        """
+        if destination is None:
+            destination = {}
+
+        # Save the model parameters
+        for name, param in self.model.named_parameters(recurse=True):
+            if not keep_vars:
+                param = param.detach()
+            destination[prefix + name] = param
+
+        return destination
+
 
     def load_kv_cache_scales(self, quantization_param_path: str) -> None:
         self.model.load_kv_cache_scales(quantization_param_path)

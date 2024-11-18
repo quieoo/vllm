@@ -61,6 +61,7 @@ from vllm.usage.usage_lib import (UsageContext, is_usage_stats_enabled,
                                   usage_message)
 from vllm.utils import Counter, Device, deprecate_kwargs, weak_bind
 from vllm.version import __version__ as VLLM_VERSION
+from torch import nn
 
 logger = init_logger(__name__)
 _LOCAL_LOGGING_INTERVAL_SEC = 5
@@ -477,6 +478,8 @@ class LLMEngine:
 
         self.seq_id_to_seq_group: Dict[str, SequenceGroupBase] = {}
 
+    def expose_model(self) -> nn.Module:
+        return self.model_executor.expose_model()
     def _initialize_kv_caches(self) -> None:
         """Initialize the KV cache in the worker(s).
 

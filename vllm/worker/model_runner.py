@@ -1149,7 +1149,13 @@ class GPUModelRunnerBase(ModelRunnerBase[TModelInputForGPU]):
                 self.model,
                 fullgraph=envs.VLLM_TEST_DYNAMO_FULLGRAPH_CAPTURE,
                 backend=backend)
+    def expose_model(self) -> nn.Module:
+        if not isinstance(self.model, nn.Module):
+            raise TypeError("self.model must be an instance of nn.Module.")
+        
+        return self.model
 
+    
     def save_sharded_state(
         self,
         path: str,

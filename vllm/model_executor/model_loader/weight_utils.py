@@ -437,6 +437,16 @@ def get_gguf_extra_tensor_names(
     return [gguf_to_hf_name_map[key] for key in extra_keys]
 
 
+import traceback
+import time
+
+def print_stack():
+    print("Call stack:")
+    stack = traceback.format_stack()
+    for line in stack:
+        print(line.strip())
+
+
 def gguf_quant_weights_iterator(
     gguf_file: str, gguf_to_hf_name_map: Dict[str, str]
 ) -> Generator[Tuple[str, torch.Tensor], None, None]:
@@ -444,7 +454,8 @@ def gguf_quant_weights_iterator(
     Iterate over the quant weights in the model gguf files and convert
     them to torch tensors
     """
-
+    # print_stack()
+    # start_time = time.time()  # 开始计时
     reader = gguf.GGUFReader(gguf_file)
 
     for tensor in reader.tensors:
@@ -467,6 +478,9 @@ def gguf_quant_weights_iterator(
                 name = name.replace("weight", "qweight")
             param = torch.tensor(weight)
             yield name, param
+    # end_time = time.time()  # 结束计时
+    # execution_time = end_time - start_time
+    # print(f"Function gguf_quant_weights_iterator executed in {execution_time:.6f} seconds.")
 
 
 def kv_cache_scales_loader(

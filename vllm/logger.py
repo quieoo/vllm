@@ -19,7 +19,10 @@ VLLM_LOGGING_PREFIX = envs.VLLM_LOGGING_PREFIX
 
 _FORMAT = (f"{VLLM_LOGGING_PREFIX}%(levelname)s %(asctime)s "
            "%(filename)s:%(lineno)d] %(message)s")
-_DATE_FORMAT = "%m-%d %H:%M:%S"
+# _DATE_FORMAT = "%m-%d %H:%M:%S"
+_DATE_FORMAT = "%m-%d %H:%M:%S.%f"
+
+
 
 DEFAULT_LOGGING_CONFIG = {
     "formatters": {

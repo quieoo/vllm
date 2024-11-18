@@ -31,6 +31,7 @@ from vllm.transformers_utils.tokenizer import (AnyTokenizer, MistralTokenizer,
 from vllm.transformers_utils.tokenizer_group import TokenizerGroup
 from vllm.usage.usage_lib import UsageContext
 from vllm.utils import Counter, deprecate_args, deprecate_kwargs, is_list_of
+from torch import nn
 
 logger = init_logger(__name__)
 
@@ -218,6 +219,9 @@ class LLM:
             engine_args, usage_context=UsageContext.LLM_CLASS)
 
         self.request_counter = Counter()
+
+    def expose_model(self) -> nn.Module:
+        return self.llm_engine.expose_model()
 
     @staticmethod
     def get_engine_class() -> Type[LLMEngine]:

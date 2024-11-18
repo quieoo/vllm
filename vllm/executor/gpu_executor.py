@@ -9,7 +9,7 @@ from vllm.sequence import ExecuteModelRequest, PoolerOutput
 from vllm.utils import (get_distributed_init_method, get_ip, get_open_port,
                         make_async)
 from vllm.worker.worker_base import WorkerBase, WorkerWrapperBase
-
+from torch import nn
 logger = init_logger(__name__)
 
 
@@ -34,10 +34,15 @@ class GPUExecutor(ExecutorBase):
         """
         assert self.parallel_config.world_size == 1, (
             "GPUExecutor only supports single GPU.")
-
+        # logger.info("a init executer..")
         self.driver_worker = self._create_worker()
+        # logger.info("b init_device...")
         self.driver_worker.init_device()
+        # logger.info("c load_model...")
         self.driver_worker.load_model()
+        # logger.info("d load down.")
+    def expose_model(self) -> nn.Module:
+        return self.driver_worker.expose_model()
 
     def _get_worker_kwargs(
             self,
