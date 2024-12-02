@@ -19,6 +19,8 @@ from vllm.platforms import current_platform
 from vllm.sequence import IntermediateTensors
 from vllm.utils import is_pin_memory_available
 
+import inspect
+
 logger = init_logger(__name__)
 
 WeightsMapping = Mapping[str, Optional[str]]
@@ -148,7 +150,6 @@ class AutoWeightsLoader:
                 raise ValueError(
                     f"Attempted to load nested weight '{weight_qualname}' "
                     f"into a single parameter '{base_prefix}'")
-
             weight_loader = getattr(param, "weight_loader",
                                     default_weight_loader)
             weight_loader(param, weight_data)
@@ -172,6 +173,19 @@ class AutoWeightsLoader:
         if module != self.module:
             module_load_weights = getattr(module, "load_weights", None)
             if callable(module_load_weights):
+                # Get the file and line number where the method is defined
+                # try:
+                #     # Get the file path and line number of the function definition
+                #     file_path = inspect.getfile(module_load_weights)
+                #     source_line = inspect.getsourcelines(module_load_weights)[1]  # line number
+
+                #     print(f"Using load_weights method from module: {module_load_weights.__name__}")
+                #     print(f"Method location: {file_path}, Line: {source_line}")
+
+                # except Exception as e:
+                #     print(f"Error retrieving method location: {e}")
+                    # Using load_weights method from module: load_weights
+                    # Method location:/vllm/model_executor/models/llama.py, Line: 353
                 module_load_weights(weights)
                 return
 

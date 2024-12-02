@@ -19,6 +19,10 @@ IMAGE_URLS = [
     "https://upload.wikimedia.org/wikipedia/commons/7/77/002_The_lion_king_Snyggve_in_the_Serengeti_National_Park_Photo_by_Giles_Laurent.jpg",
 ]
 
+IMAGE_PATHS = [
+    "/public/home/shenzhaoyan002/zhu/data/duck.jpg",
+    "/public/home/shenzhaoyan002/zhu/data/lion.jpg",
+]
 
 class ModelRequestData(NamedTuple):
     llm: LLM
@@ -221,23 +225,26 @@ def load_qwen2_vl(question, image_urls: List[str]) -> ModelRequestData:
         process_vision_info = None
 
     # model_name = "Qwen/Qwen2-VL-7B-Instruct"
-    model_name="/public/home/shenzhaoyan002/zhu/models/Qwen2-VL-7B-Instruct/"
+    # model_name="/public/home/shenzhaoyan002/zhu/models/Qwen2-VL-7B-Instruct/"
+    model_name="/public/home/shenzhaoyan002/zhu/models/OS-Atlas-Base-7B/"
 
     # Tested on L40
+    mlen=0
     if process_vision_info:
         mlen=32768
     else:
         mlen=4096
 
     print(f"max_model_len {mlen}")
+
     llm = LLM(
         model=model_name,
         max_model_len=mlen,
         max_num_seqs=5,
-        limit_mm_per_prompt={"image": len(image_urls)},
+        limit_mm_per_prompt={"image": len(IMAGE_PATHS)},
     )
 
-    placeholders = [{"type": "image", "image": url} for url in image_urls]
+    placeholders = [{"type": "image", "image": path} for path in IMAGE_PATHS]
     messages = [{
         "role": "system",
         "content": "You are a helpful assistant."
@@ -253,6 +260,7 @@ def load_qwen2_vl(question, image_urls: List[str]) -> ModelRequestData:
         ],
     }]
 
+
     processor = AutoProcessor.from_pretrained(model_name)
 
     prompt = processor.apply_chat_template(messages,
@@ -262,9 +270,16 @@ def load_qwen2_vl(question, image_urls: List[str]) -> ModelRequestData:
     stop_token_ids = None
 
     if process_vision_info is None:
-        image_data = [fetch_image(url) for url in image_urls]
+        # image_data = [fetch_image(url) for url in image_urls]
+        print("error: process_vision_info is None")
     else:
-        image_data, _ = process_vision_info(messages)
+        print(f"Input to process_vision_info: {messages}")
+        try:
+            image_data, _ = process_vision_info(messages)
+            print(f"Output from process_vision_info: {image_data}")
+        except Exception as e:
+            print(f"Error in process_vision_info: {e}")
+            raise
 
     return ModelRequestData(
         llm=llm,

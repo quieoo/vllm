@@ -560,7 +560,7 @@ class LlamaForCausalLM(nn.Module, SupportsLoRA, SupportsPP):
         model_output = self.model(input_ids, positions, kv_caches,
                                   attn_metadata, intermediate_tensors,
                                   inputs_embeds)
-        timed_step("forward", start_time)
+        # timed_step("forward", start_time)
         return model_output
 
     def compute_logits(
