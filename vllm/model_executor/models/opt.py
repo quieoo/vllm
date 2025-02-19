@@ -40,6 +40,7 @@ from vllm.model_executor.layers.vocab_parallel_embedding import (
 from vllm.model_executor.model_loader.weight_utils import default_weight_loader
 from vllm.model_executor.sampling_metadata import SamplingMetadata
 from vllm.sequence import SamplerOutput
+import time
 
 
 class OPTLearnedPositionalEmbedding(nn.Embedding):
@@ -190,52 +191,81 @@ class OPTDecoder(nn.Module):
         cache_config: Optional[CacheConfig] = None,
         quant_config: Optional[QuantizationConfig] = None,
     ):
+        # Record the overall start time
+        total_start = time.time()
+
         super().__init__()
+        # Step 1: Set basic attributes
+        # t0 = time.time()
         self.config = config
         self.padding_idx = config.pad_token_id
         self.max_target_positions = config.max_position_embeddings
         self.vocab_size = config.vocab_size
+        # t1 = time.time()
+        # print("Step 1: Basic attribute assignment took {:.3f} ms".format((t1 - t0) * 1000))
 
+        # Step 2: Initialize token embedding and positional embedding
+        # t0 = time.time()
         self.embed_tokens = VocabParallelEmbedding(
             config.vocab_size,
             config.word_embed_proj_dim,
         )
-        # Positional embeddings are replicated (not sharded).
         self.embed_positions = OPTLearnedPositionalEmbedding(
             config.max_position_embeddings, config.hidden_size)
+        # t1 = time.time()
+        # print("Step 2: Token and positional embedding initialization took {:.3f} ms".format((t1 - t0) * 1000))
 
-        # Project out & in will be replicated if they exist.
+        # Step 3: Initialize project_out if necessary
+        # t0 = time.time()
         if config.word_embed_proj_dim != config.hidden_size:
-            self.project_out = ReplicatedLinear(config.hidden_size,
-                                                config.word_embed_proj_dim,
-                                                bias=False,
-                                                quant_config=quant_config)
+            self.project_out = ReplicatedLinear(
+                config.hidden_size,
+                config.word_embed_proj_dim,
+                bias=False,
+                quant_config=quant_config
+            )
         else:
             self.project_out = None
+        # t1 = time.time()
+        # print("Step 3: project_out initialization took {:.3f} ms".format((t1 - t0) * 1000))
 
+        # Step 4: Initialize project_in if necessary
+        # t0 = time.time()
         if config.word_embed_proj_dim != config.hidden_size:
-            self.project_in = ReplicatedLinear(config.word_embed_proj_dim,
-                                               config.hidden_size,
-                                               bias=False,
-                                               quant_config=quant_config)
+            self.project_in = ReplicatedLinear(
+                config.word_embed_proj_dim,
+                config.hidden_size,
+                bias=False,
+                quant_config=quant_config
+            )
         else:
             self.project_in = None
+        # t1 = time.time()
+        # print("Step 4: project_in initialization took {:.3f} ms".format((t1 - t0) * 1000))
 
-        # Note that the only purpose of `config._remove_final_layer_norm` is to
-        # keep backward compatibility with checkpoints that have been fine-tuned
-        # before transformers v4.20.1
-        # see https://github.com/facebookresearch/metaseq/pull/164
+        # Step 5: Initialize final_layer_norm if required
+        # t0 = time.time()
         if config.do_layer_norm_before and not config._remove_final_layer_norm:
             self.final_layer_norm = nn.LayerNorm(
                 config.hidden_size,
-                elementwise_affine=config.layer_norm_elementwise_affine)
+                elementwise_affine=config.layer_norm_elementwise_affine
+            )
         else:
             self.final_layer_norm = None
+        # t1 = time.time()
+        # print("Step 5: final_layer_norm initialization took {:.3f} ms".format((t1 - t0) * 1000))
 
+        # Step 6: Initialize decoder layers and store them in a ModuleList
+        # t0 = time.time()
         self.layers = nn.ModuleList([
             OPTDecoderLayer(config, cache_config, quant_config)
             for _ in range(config.num_hidden_layers)
         ])
+        # t1 = time.time()
+        # print("Step 6: Decoder layers initialization took {:.3f} ms".format((t1 - t0) * 1000))
+
+        total_end = time.time()
+        print("Total initialization time: {:.3f} ms".format((total_end - total_start) * 1000))
 
     def forward(
         self,

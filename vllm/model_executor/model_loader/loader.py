@@ -669,6 +669,9 @@ class ServerlessLLMLoader(BaseModelLoader):
                 model = model.eval()
             # set all parameters to meta device
             state_dict = self._filter_subtensors(model.state_dict())
+            # print(f"### model loader filter_subtensors: original state_dict size: {len(model.state_dict())}, filtered state_dict size: {len(state_dict)}")
+            # outut:
+                # (VllmBackend pid=3982026) ### model loader filter_subtensors: original state_dict size: 389, filtered state_dict size: 388
             key_list = list(state_dict.keys())
             
             for key, param in model.named_parameters(recurse=True):
@@ -700,7 +703,7 @@ class ServerlessLLMLoader(BaseModelLoader):
         max_size: Optional[int] = None,
     ) -> None:
         from vllm.distributed import get_tensor_model_parallel_rank
-        from sllm_store.torch import save_dict
+        from sllm_store.torch import save_dict, save_tensor_group_dict
         
         rank = get_tensor_model_parallel_rank()
         state_dict = ServerlessLLMLoader._filter_subtensors(model.state_dict())
@@ -712,9 +715,11 @@ class ServerlessLLMLoader(BaseModelLoader):
         save_path = os.path.join(path, f"rank_{rank}")
         if not os.path.exists(save_path):
             os.makedirs(save_path)
-            
-        save_dict(state_dict, save_path)
-
+        if "tmp" in save_path:
+        # save_dict(state_dict, save_path)
+            save_tensor_group_dict(state_dict, save_path)
+        else:
+            save_dict(state_dict, save_path)
 
 class BitsAndBytesModelLoader(BaseModelLoader):
     """Model loader to load model weights with BitAndBytes quantization."""

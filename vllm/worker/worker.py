@@ -165,6 +165,16 @@ class Worker(WorkerBase):
             You may limit the usage of GPU memory
             by adjusting the `gpu_memory_utilization` parameter.
         """
+        # align with ReuseStore
+        free_gpu_memory, total_gpu_memory = torch.cuda.mem_get_info()
+        cache_block_size = self.get_cache_block_size_bytes()
+        num_gpu_blocks = int(free_gpu_memory * 0.5 // cache_block_size)
+        num_cpu_blocks = int(self.cache_config.swap_space_bytes //
+                             cache_block_size)
+        return num_gpu_blocks, num_cpu_blocks
+
+
+
         # Profile the memory usage of the model and get the maximum number of
         # cache blocks that can be allocated with the remaining free memory.
         torch.cuda.empty_cache()

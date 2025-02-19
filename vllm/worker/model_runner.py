@@ -145,6 +145,7 @@ class ModelRunner:
 
     def load_model(self) -> None:
         with CudaMemoryProfiler() as m:
+            start_load_model_time= time.time()
             self.model = get_model(
                 model_config=self.model_config,
                 device_config=self.device_config,
@@ -155,6 +156,8 @@ class ModelRunner:
                 scheduler_config=self.scheduler_config,
                 cache_config=self.cache_config,
             )
+            end_load_model_time = time.time()
+            print(f" ### load_model {end_load_model_time} : load takes {end_load_model_time - start_load_model_time:.2f} seconds")
 
         self.model_memory_usage = m.consumed_memory
         logger.info("Loading model weights took %.4f GB",
