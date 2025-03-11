@@ -258,7 +258,7 @@ class XFormersImpl(AttentionImpl[XFormersMetadata]):
         query = query.view(-1, self.num_heads, self.head_size)
         key = key.view(-1, self.num_kv_heads, self.head_size)
         value = value.view(-1, self.num_kv_heads, self.head_size)
-
+        # print(f"[XFormers] : attn_metadata {attn_metadata}")
         if kv_cache is not None:
             key_cache, value_cache = PagedAttention.split_kv_cache(
                 kv_cache, self.num_kv_heads, self.head_size)
@@ -293,6 +293,9 @@ class XFormersImpl(AttentionImpl[XFormersMetadata]):
                 # normal attention.
                 # block tables are empty if the prompt does not have a cached
                 # prefix.
+                
+                # print("[XFormers] : normal attention") "normal attention"
+                # print(f"[XFormers] : kv_cache shape {kv_cache.shape}") kv_cache shape torch.Size([2, 472, 65536])
                 out = self._run_memory_efficient_xformers_forward(
                     query, key, value, prefill_meta)
                 assert out.shape == output[:num_prefill_tokens].shape

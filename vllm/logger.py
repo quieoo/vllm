@@ -16,7 +16,9 @@ VLLM_CONFIGURE_LOGGING = envs.VLLM_CONFIGURE_LOGGING
 VLLM_LOGGING_CONFIG_PATH = envs.VLLM_LOGGING_CONFIG_PATH
 VLLM_LOGGING_LEVEL = envs.VLLM_LOGGING_LEVEL
 
-_FORMAT = "%(levelname)s %(asctime)s %(filename)s:%(lineno)d] %(message)s"
+# _FORMAT = "%(levelname)s %(asctime)s %(filename)s:%(lineno)d] %(message)s"
+_FORMAT = "%(levelname)s %(asctime)s.%(msecs)03d %(filename)s:%(lineno)d] %(message)s"
+
 _DATE_FORMAT = "%m-%d %H:%M:%S"
 
 DEFAULT_LOGGING_CONFIG = {
@@ -115,13 +117,23 @@ def _trace_calls(log_path, root_dir, frame, event, arg=None):
                 last_lineno = 0
                 last_func_name = ""
             with open(log_path, 'a') as f:
+                # if event == 'call':
+                #     f.write(f"{datetime.datetime.now()} Call to"
+                #             f" {func_name} in {filename}:{lineno}"
+                #             f" from {last_func_name} in {last_filename}:"
+                #             f"{last_lineno}\n")
+                # else:
+                #     f.write(f"{datetime.datetime.now()} Return from"
+                #             f" {func_name} in {filename}:{lineno}"
+                #             f" to {last_func_name} in {last_filename}:"
+                #             f"{last_lineno}\n")
                 if event == 'call':
-                    f.write(f"{datetime.datetime.now()} Call to"
+                    f.write(f"{datetime.datetime.now():%m-%d %H:%M:%S.%f} Call to"
                             f" {func_name} in {filename}:{lineno}"
                             f" from {last_func_name} in {last_filename}:"
                             f"{last_lineno}\n")
                 else:
-                    f.write(f"{datetime.datetime.now()} Return from"
+                    f.write(f"{datetime.datetime.now():%m-%d %H:%M:%S.%f} Return from"
                             f" {func_name} in {filename}:{lineno}"
                             f" to {last_func_name} in {last_filename}:"
                             f"{last_lineno}\n")

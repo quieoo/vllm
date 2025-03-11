@@ -38,6 +38,8 @@ from vllm.usage.usage_lib import (UsageContext, is_usage_stats_enabled,
                                   usage_message)
 from vllm.utils import Counter
 from vllm.version import __version__ as VLLM_VERSION
+from vllm.backgroud_logger import logger as bg_logger
+
 
 logger = init_logger(__name__)
 _LOCAL_LOGGING_INTERVAL_SEC = 5
@@ -196,7 +198,7 @@ class LLMEngine:
             model_config.served_model_name,
         )
         # TODO(woosuk): Print more configs in debug mode.
-
+        bg_logger.info("[LLMENGINE Init] 0 Start")
         self.model_config = model_config
         self.cache_config = cache_config
         self.lora_config = lora_config
@@ -215,10 +217,12 @@ class LLMEngine:
         else:
             self.tokenizer = None
             self.detokenizer = None
+        bg_logger.info("[LLMENGINE Init] 1 Tokenizer")
 
         self.seq_counter = Counter()
         self.generation_config_fields = _load_generation_config_dict(
             model_config)
+        bg_logger.info("[LLMENGINE Init] 2 Generation Config")
 
         self.model_executor = executor_class(
             model_config=model_config,
@@ -231,9 +235,11 @@ class LLMEngine:
             speculative_config=speculative_config,
             load_config=load_config,
         )
+        bg_logger.info("[LLMENGINE Init] 3 Create Model Executor")
 
         if not self.model_config.embedding_mode:
             self._initialize_kv_caches()
+            bg_logger.info("[LLMENGINE Init] 4 Initialize KV Caches")
 
         # If usage stat is enabled, collect relevant info.
         if is_usage_stats_enabled():
@@ -269,16 +275,19 @@ class LLMEngine:
                     "disable_custom_all_reduce":
                     parallel_config.disable_custom_all_reduce,
                 })
+            bg_logger.info("[LLMENGINE Init] 5 Report Usage")
 
         if self.tokenizer:
             # Ping the tokenizer to ensure liveness if it runs in a
             # different process.
             self.tokenizer.ping()
+            bg_logger.info("[LLMENGINE Init] 6 Ping Tokenizer")
 
         # Create the scheduler.
         # NOTE: the cache_config here have been updated with the numbers of
         # GPU and CPU blocks, which are profiled in the distributed executor.
         self.scheduler = Scheduler(scheduler_config, cache_config, lora_config)
+        bg_logger.info("[LLMENGINE Init] 7 Create Scheduler")
 
         # Metric Logging.
         if self.log_stats:
@@ -287,6 +296,7 @@ class LLMEngine:
                 labels=dict(model_name=model_config.served_model_name),
                 max_model_len=self.model_config.max_model_len)
             self.stat_logger.info("cache_config", self.cache_config)
+            bg_logger.info("[LLMENGINE Init] 8 Create StatLogger")
 
         # Create sequence output processor, e.g. for beam search or
         # speculative decoding.
@@ -302,6 +312,7 @@ class LLMEngine:
                     self.get_tokenizer_for_seq,
                 ),
             ))
+        bg_logger.info("[LLMENGINE Init] 9 Create SequenceGroupOutputProcessor")
 
     def _initialize_kv_caches(self) -> None:
         """Initialize the KV cache in the worker(s).

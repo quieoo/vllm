@@ -36,8 +36,9 @@ from vllm.model_executor.model_loader.weight_utils import (
 from vllm.model_executor.models.vlm_base import VisionLanguageModelBase
 from vllm.model_executor.utils import set_weight_attrs
 from vllm.utils import is_tpu
+from vllm.backgroud_logger import logger
 
-logger = init_logger(__name__)
+# logger = init_logger(__name__)
 
 
 def _get_quantization_config(
@@ -660,6 +661,7 @@ class ServerlessLLMLoader(BaseModelLoader):
         storage_path = os.getenv("STORAGE_PATH", "./models")
         model_path = remove_prefix(local_model_path, storage_path)
         
+        logger.info(f"[Loader LoadModel] 1 : Start Initialize Model")
         with set_default_torch_dtype(model_config.dtype):
             # with torch.device(device_config.device):
             with torch.device("cpu"):
@@ -682,8 +684,9 @@ class ServerlessLLMLoader(BaseModelLoader):
             device_id = torch.cuda.current_device()
             device_map = {"": device_id}
             # Note: storage path is already included in the local model path
+            logger.info("[Loader LoadModel] 2 : Start Load Weights")
             sllm_state_dict = load_dict(model_path, device_map)
-            
+            logger.info("[Loader LoadModel] 3 : Start Moving Weights")
             for key, param in model.named_parameters(recurse=True):
                 if key in key_list:
                     tensor = sllm_state_dict[key]
@@ -692,7 +695,7 @@ class ServerlessLLMLoader(BaseModelLoader):
             if state_dict:
                 raise ValueError(
                     f"Missing keys {tuple(state_dict)} in loaded state!")
-            
+        logger.info("[Loader LoadModel] 4 : Finish Load Weights")
         return model
 
     @staticmethod
@@ -717,7 +720,8 @@ class ServerlessLLMLoader(BaseModelLoader):
             os.makedirs(save_path)
         if "tmp" in save_path:
         # save_dict(state_dict, save_path)
-            save_tensor_group_dict(state_dict, save_path)
+            chunk_megabytes=8
+            save_tensor_group_dict(state_dict, save_path, chunk_megabytes)
         else:
             save_dict(state_dict, save_path)
 

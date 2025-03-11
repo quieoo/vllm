@@ -23,6 +23,11 @@ from vllm.worker.model_runner import ModelRunner
 from vllm.worker.worker_base import WorkerBase
 
 
+from vllm.backgroud_logger import logger as bg_logger
+from sllm_store.torch import get_and_open_gpu_pool_handle, close_gpu_pool_handle
+import threading
+
+
 class Worker(WorkerBase):
     """A worker class that executes (a partition of) the model on a GPU.
 
@@ -30,7 +35,9 @@ class Worker(WorkerBase):
     maintaining the KV cache and executing the model on the GPU. In case of
     distributed inference, each worker is assigned a partition of the model.
     """
-
+    def __del__(self):
+        close_gpu_pool_handle()
+        bg_logger.info(f"[ReuseStore] close gpu pool handle in worker")
     def __init__(
         self,
         model_config: ModelConfig,
@@ -90,6 +97,8 @@ class Worker(WorkerBase):
         # Initialize gpu_cache as embedding models don't initialize kv_caches
         self.gpu_cache: Optional[List[torch.tensor]] = None
 
+        self.get_mem_handle_thread = None
+
     def init_device(self) -> None:
         if self.device_config.device.type == "cuda":
             # torch.distributed.all_reduce does not free the input tensor until
@@ -106,7 +115,12 @@ class Worker(WorkerBase):
             torch.cuda.set_device(self.device)
 
             _check_if_gpu_supports_dtype(self.model_config.dtype)
-            torch.cuda.empty_cache()
+            # torch.cuda.empty_cache()
+            self.get_mem_handle_thread = threading.Thread(target=get_and_open_gpu_pool_handle, args=(self.local_rank,))
+            self.get_mem_handle_thread.daemon = True
+            self.get_mem_handle_thread.start()
+            bg_logger.info(f"[ReuseStore] get and open gpu pool handle for device-{self.local_rank} in the background")
+
             self.init_gpu_memory = torch.cuda.mem_get_info()[0]
         else:
             raise RuntimeError(
@@ -171,6 +185,7 @@ class Worker(WorkerBase):
         num_gpu_blocks = int(free_gpu_memory * 0.5 // cache_block_size)
         num_cpu_blocks = int(self.cache_config.swap_space_bytes //
                              cache_block_size)
+        
         return num_gpu_blocks, num_cpu_blocks
 
 
@@ -256,6 +271,12 @@ class Worker(WorkerBase):
         self,
         execute_model_req: Optional[ExecuteModelRequest] = None
     ) -> List[Union[SamplerOutput, PoolerOutput]]:
+        
+        bg_logger.info("[Worker ExecuteModel] 0 : Start execute model")
+        if self.get_mem_handle_thread is not None:
+            self.get_mem_handle_thread.join()
+            bg_logger.info("[Worker ExecuteModel] 0.1 : Waiting for get_mem_handle_thread to finish")
+
         if not self.is_driver_worker:
             self._execute_model_non_driver()
             return []
@@ -271,6 +292,7 @@ class Worker(WorkerBase):
 
         seq_group_metadata_list = execute_model_req.seq_group_metadata_list
         num_seq_groups = len(seq_group_metadata_list)
+        bg_logger.info("[Worker ExecuteModel] 1 : Get seq_group_metadata_list")
         # `blocks_to_swap_in` and `blocks_to_swap_out` are cpu tensors.
         # they contain parameters to launch cudamemcpyasync.
         blocks_to_swap_in = torch.tensor(execute_model_req.blocks_to_swap_in,
@@ -285,6 +307,7 @@ class Worker(WorkerBase):
         blocks_to_copy = torch.tensor(execute_model_req.blocks_to_copy,
                                       device=self.device,
                                       dtype=torch.int64).view(-1, 2)
+        bg_logger.info("[Worker ExecuteModel] 2 : Get blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy")
         data: Dict[str, Any] = {
             "num_seq_groups": num_seq_groups,
             "blocks_to_swap_in": blocks_to_swap_in,
@@ -292,15 +315,18 @@ class Worker(WorkerBase):
             "blocks_to_copy": blocks_to_copy,
         }
         broadcast_tensor_dict(data, src=0)
-
+        bg_logger.info("[Worker ExecuteModel] 3 : Broadcast data")
+        bg_logger.info(f"[Worker ExecuteModel]: {data}")
         self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
+        bg_logger.info("[Worker ExecuteModel] 4 : Cache swap")
 
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
             return []
-
+        bg_logger.info("[Worker ExecuteModel] 5 : Begin to Call Model Runner")
         output = self.model_runner.execute_model(seq_group_metadata_list,
                                                  self.gpu_cache)
+        bg_logger.info("[Worker ExecuteModel] 6 : Call Model Runner Finish")
 
         # Worker only supports single-step execution. Wrap the output in a list
         # to conform to interface.

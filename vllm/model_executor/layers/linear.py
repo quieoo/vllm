@@ -14,7 +14,7 @@ from vllm.logger import init_logger
 from vllm.model_executor.layers.quantization.base_config import (
     QuantizationConfig, QuantizeMethodBase)
 from vllm.model_executor.utils import set_weight_attrs
-
+from vllm.backgroud_logger import logger as bg_logger
 logger = init_logger(__name__)
 
 

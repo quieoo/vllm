@@ -41,7 +41,12 @@ from vllm.model_executor.model_loader.weight_utils import default_weight_loader
 from vllm.model_executor.sampling_metadata import SamplingMetadata
 from vllm.sequence import SamplerOutput
 import time
+from vllm.logger import init_logger
+import traceback
 
+from vllm.backgroud_logger import logger
+
+# logger = init_logger(__name__)
 
 class OPTLearnedPositionalEmbedding(nn.Embedding):
 
@@ -101,10 +106,15 @@ class OPTAttention(nn.Module):
         kv_cache: torch.Tensor,
         attn_metadata: AttentionMetadata,
     ) -> torch.Tensor:
+        logger.info("[OPTAttention forward] 0")
         qkv, _ = self.qkv_proj(hidden_states)
+        logger.info("[OPTAttention forward] 1 : qkv proj")
         q, k, v = qkv.chunk(chunks=3, dim=-1)
+        logger.info("[OPTAttention forward] 2 : qkv chunk")
         attn_output = self.attn(q, k, v, kv_cache, attn_metadata)
+        logger.info("[OPTAttention forward] 3 : attn")
         output, _ = self.out_proj(attn_output)
+        logger.info("[OPTAttention forward] 4 : out proj")
         return output
 
 
@@ -155,31 +165,43 @@ class OPTDecoderLayer(nn.Module):
         kv_cache: torch.Tensor,
         attn_metadata: AttentionMetadata,
     ) -> torch.Tensor:
+        logger.info(f"[OPT Layer] 0 : Start, current hidden_states: {hidden_states.shape}")
         # Self Attention
         residual = hidden_states
         # 125m, 1.7B, ..., 175B applies layer norm BEFORE attention
         if self.do_layer_norm_before:
             hidden_states = self.self_attn_layer_norm(hidden_states)
+            logger.info(f"[OPT Layer] 1 : Layer norm before attention")
         hidden_states = self.self_attn(hidden_states=hidden_states,
                                        kv_cache=kv_cache,
                                        attn_metadata=attn_metadata)
+        logger.info(f"[OPT Layer] 2 : Self attention")
         hidden_states = residual + hidden_states
+        logger.info(f"[OPT Layer] 2.1 : Add residual")
         # 350m applies layer norm AFTER attention
         if not self.do_layer_norm_before:
             hidden_states = self.self_attn_layer_norm(hidden_states)
+            logger.info(f"[OPT Layer] 3 : Layer norm after attention")
 
         # Fully Connected
         residual = hidden_states
         # 125m, 1.7B, ..., 175B applies layer norm BEFORE attention
         if self.do_layer_norm_before:
             hidden_states = self.final_layer_norm(hidden_states)
+            logger.info(f"[OPT Layer] 4 : Layer norm before ffn")
         hidden_states, _ = self.fc1(hidden_states)
+        logger.info(f"[OPT Layer] 5 : FC1")
         hidden_states = self.activation_fn(hidden_states)
+        logger.info(f"[OPT Layer] 6 : Activation FN")
         hidden_states, _ = self.fc2(hidden_states)
+        logger.info(f"[OPT Layer] 7 : FC2")        
         hidden_states = residual + hidden_states
+        logger.info(f"[OPT Layer] 7.1 : Add residual")
         # 350m applies layer norm AFTER attention
         if not self.do_layer_norm_before:
             hidden_states = self.final_layer_norm(hidden_states)
+            logger.info(f"[OPT Layer] 8 : Layer norm after ffn")
+        
         return hidden_states
 
 
@@ -192,6 +214,7 @@ class OPTDecoder(nn.Module):
         quant_config: Optional[QuantizationConfig] = None,
     ):
         # Record the overall start time
+        logger.info("[OPT Initialize] Step 0: Start initializing OPTDecoder")
         total_start = time.time()
 
         super().__init__()
@@ -203,6 +226,7 @@ class OPTDecoder(nn.Module):
         self.vocab_size = config.vocab_size
         # t1 = time.time()
         # print("Step 1: Basic attribute assignment took {:.3f} ms".format((t1 - t0) * 1000))
+        logger.info("[OPT Initialize] Step 1: Basic attribute assignment")
 
         # Step 2: Initialize token embedding and positional embedding
         # t0 = time.time()
@@ -210,10 +234,12 @@ class OPTDecoder(nn.Module):
             config.vocab_size,
             config.word_embed_proj_dim,
         )
+        logger.info("[OPT Initialize] Step 1.1: Token embedding initialization")
         self.embed_positions = OPTLearnedPositionalEmbedding(
             config.max_position_embeddings, config.hidden_size)
         # t1 = time.time()
         # print("Step 2: Token and positional embedding initialization took {:.3f} ms".format((t1 - t0) * 1000))
+        logger.info("[OPT Initialize] Step 2: Token and positional embedding initialization")
 
         # Step 3: Initialize project_out if necessary
         # t0 = time.time()
@@ -228,6 +254,7 @@ class OPTDecoder(nn.Module):
             self.project_out = None
         # t1 = time.time()
         # print("Step 3: project_out initialization took {:.3f} ms".format((t1 - t0) * 1000))
+        logger.info("[OPT Initialize] Step 3: project_out initialization")
 
         # Step 4: Initialize project_in if necessary
         # t0 = time.time()
@@ -242,6 +269,7 @@ class OPTDecoder(nn.Module):
             self.project_in = None
         # t1 = time.time()
         # print("Step 4: project_in initialization took {:.3f} ms".format((t1 - t0) * 1000))
+        logger.info("[OPT Initialize] Step 4: project_in initialization")
 
         # Step 5: Initialize final_layer_norm if required
         # t0 = time.time()
@@ -254,6 +282,7 @@ class OPTDecoder(nn.Module):
             self.final_layer_norm = None
         # t1 = time.time()
         # print("Step 5: final_layer_norm initialization took {:.3f} ms".format((t1 - t0) * 1000))
+        logger.info("[OPT Initialize] Step 5: final_layer_norm initialization")
 
         # Step 6: Initialize decoder layers and store them in a ModuleList
         # t0 = time.time()
@@ -263,6 +292,7 @@ class OPTDecoder(nn.Module):
         ])
         # t1 = time.time()
         # print("Step 6: Decoder layers initialization took {:.3f} ms".format((t1 - t0) * 1000))
+        logger.info("[OPT Initialize] Step 6: Decoder layers initialization")
 
         total_end = time.time()
         print("Total initialization time: {:.3f} ms".format((total_end - total_start) * 1000))
@@ -274,20 +304,30 @@ class OPTDecoder(nn.Module):
         kv_caches: List[torch.Tensor],
         attn_metadata: AttentionMetadata,
     ) -> torch.Tensor:
+        logger.info(f"[OPT Decoder forward] 0 : Start input token size {input_ids.shape}, kv cache: {len(kv_caches)}")
+        logger.info(f"[OPT Decoder forward] 1 : Begin forward")
         inputs_embeds = self.embed_tokens(input_ids)
+        logger.info(f"[OPT Decoder forward] 2 : Token embedding")
         pos_embeds = self.embed_positions(positions)
+        logger.info(f"[OPT Decoder forward] 3 : Positional embedding")
         if self.project_in is not None:
             inputs_embeds, _ = self.project_in(inputs_embeds)
+            logger.info(f"[OPT Decoder forward] 4 : Project input")
         hidden_states = inputs_embeds + pos_embeds
+        logger.info(f"[OPT Decoder forward] 5 : Add token and positional embeddings")
 
         for i in range(len(self.layers)):
             layer = self.layers[i]
             hidden_states = layer(hidden_states, kv_caches[i], attn_metadata)
+            logger.info(f"[OPT Decoder forward] 6.{i} : Decoder layer {i}")
 
         if self.final_layer_norm is not None:
             hidden_states = self.final_layer_norm(hidden_states)
+            logger.info(f"[OPT Decoder forward] 7 : Final layer norm")
         if self.project_out is not None:
             hidden_states, _ = self.project_out(hidden_states)
+            logger.info(f"[OPT Decoder forward] 8 : Project output")
+        logger.info(f"[OPT Decoder forward] 9 : End forward")
         return hidden_states
 
 

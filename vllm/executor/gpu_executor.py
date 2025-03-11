@@ -9,6 +9,7 @@ from vllm.utils import (get_distributed_init_method, get_ip, get_open_port,
 from vllm.worker.worker_base import WorkerWrapperBase
 
 logger = init_logger(__name__)
+from vllm.backgroud_logger import logger as bg_logger
 
 
 class GPUExecutor(ExecutorBase):
@@ -16,12 +17,16 @@ class GPUExecutor(ExecutorBase):
     def _init_executor(self) -> None:
         """Initialize the worker and load the model.
         """
+        bg_logger.info("[GPUExecuter Init] 0 Start")
         assert self.parallel_config.world_size == 1, (
             "GPUExecutor only supports single GPU.")
 
         self.driver_worker = self._create_worker()
+        bg_logger.info("[GPUExecuter Init] 1 Create worker")
         self.driver_worker.init_device()
+        bg_logger.info("[GPUExecuter Init] 2 Init device")
         self.driver_worker.load_model()
+        bg_logger.info("[GPUExecuter Init] 3 Load model")
 
     def _get_worker_kwargs(
             self,

@@ -49,6 +49,7 @@ class PagedAttention:
         head_size: int,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         x = 16 // kv_cache.element_size()
+        # x=8
         num_blocks = kv_cache.shape[1]
 
         key_cache = kv_cache[0]
@@ -107,6 +108,7 @@ class PagedAttention:
 
         output = torch.empty_like(query)
         block_size = value_cache.shape[3]
+        # print(f"[PagedAttention] block_size: {block_size}") [PagedAttention] block_size: 16
         num_seqs, num_heads, head_size = query.shape
         max_num_partitions = ((max_seq_len + _PARTITION_SIZE - 1) //
                               _PARTITION_SIZE)
@@ -119,9 +121,14 @@ class PagedAttention:
         # For context len > 8192, use V2 kernel to avoid shared memory shortage.
         use_v1 = (max_seq_len <= 8192
                   and (max_num_partitions == 1 or num_seqs * num_heads > 512))
-
         if use_v1:
             # Run PagedAttention V1.
+            # if(alibi_slopes):
+            #     print(f"[PagedAttention] alibi_slopes: {alibi_slopes}")
+            # print(f"[PagedAttention] query shape: {query.shape}")
+            # query shape: torch.Size([1, 32, 128])
+            # if block_tables is not None:
+                # print(f"[PagedAttention] block_tables: {block_tables}")
             ops.paged_attention_v1(
                 output,
                 query,

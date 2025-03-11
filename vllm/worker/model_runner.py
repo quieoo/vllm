@@ -26,6 +26,8 @@ from vllm.sampling_params import SamplingParams
 from vllm.sequence import SamplerOutput, SequenceData, SequenceGroupMetadata
 from vllm.utils import (CudaMemoryProfiler, get_kv_cache_torch_dtype, is_hip,
                         is_pin_memory_available, make_tensor_with_pad)
+import traceback
+from vllm.backgroud_logger import logger as bg_logger
 
 logger = init_logger(__name__)
 
@@ -145,7 +147,6 @@ class ModelRunner:
 
     def load_model(self) -> None:
         with CudaMemoryProfiler() as m:
-            start_load_model_time= time.time()
             self.model = get_model(
                 model_config=self.model_config,
                 device_config=self.device_config,
@@ -156,8 +157,6 @@ class ModelRunner:
                 scheduler_config=self.scheduler_config,
                 cache_config=self.cache_config,
             )
-            end_load_model_time = time.time()
-            print(f" ### load_model {end_load_model_time} : load takes {end_load_model_time - start_load_model_time:.2f} seconds")
 
         self.model_memory_usage = m.consumed_memory
         logger.info("Loading model weights took %.4f GB",
@@ -747,10 +746,12 @@ class ModelRunner:
         seq_group_metadata_list: Optional[List[SequenceGroupMetadata]],
         kv_caches: List[torch.Tensor],
     ) -> Optional[SamplerOutput]:
+        bg_logger.info("[ModelRunner Execute Model] 0 : Start")
         (input_tokens, input_positions, attn_metadata, sampling_metadata,
          lora_requests, lora_mapping, multi_modal_kwargs
          ) = self.prepare_input_tensors(seq_group_metadata_list)
-
+        # bg_logger.info(f"[VLLM Attention] : {attn_metadata}")
+        bg_logger.info("[ModelRunner Execute Model] 1 : Prepare Input Tensors")
         if self.lora_config:
             self.set_active_loras(lora_requests, lora_mapping)
 
@@ -762,7 +763,7 @@ class ModelRunner:
             model_executable = self.graph_runners[graph_batch_size]
         else:
             model_executable = self.model
-
+        bg_logger.info("[ModelRunner Execute Model] 2 : Model Executable")
         hidden_states = model_executable(
             input_ids=input_tokens,
             positions=input_positions,
@@ -770,9 +771,12 @@ class ModelRunner:
             attn_metadata=attn_metadata,
             **multi_modal_kwargs,
         )
+        bg_logger.info(f"[ModelRunner Execute Model] : {attn_metadata.slot_mapping}")
+        bg_logger.info("[ModelRunner Execute Model] 3 : Model Executed")
 
         # Compute the logits.
         logits = self.model.compute_logits(hidden_states, sampling_metadata)
+        bg_logger.info("[ModelRunner Execute Model] 4 : Compute Logits")
 
         # Only perform sampling in the driver worker.
         if not self.is_driver_worker:
@@ -783,7 +787,7 @@ class ModelRunner:
             logits=logits,
             sampling_metadata=sampling_metadata,
         )
-
+        bg_logger.info("[ModelRunner Execute Model] 5 : Sampled")
         return output
 
     @torch.inference_mode()
