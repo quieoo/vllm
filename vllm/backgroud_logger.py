@@ -18,11 +18,14 @@ outputs=[
     "GPUExecuter Init",
     "Loader LoadModel",
     "OPT Initialize",
+    "AsyncBlockManager"
+
 
 # attention
     # "VLLM Attention",
-    "Paged Attention",
-    "ReuseStore",
+    # "Paged Attention",
+    # "ReuseStore",
+    # "Scheduler",
 ]
 
 class BackgroundFileHandler(BufferingHandler):

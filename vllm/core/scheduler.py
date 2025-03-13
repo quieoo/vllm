@@ -13,6 +13,7 @@ from vllm.logger import init_logger
 from vllm.lora.request import LoRARequest
 from vllm.sequence import (Sequence, SequenceData, SequenceGroup,
                            SequenceGroupMetadata, SequenceStatus)
+from vllm.backgroud_logger import logger as bg_logger
 
 logger = init_logger(__name__)
 
@@ -319,6 +320,7 @@ class Scheduler:
 
     def add_seq_group(self, seq_group: SequenceGroup) -> None:
         # Add sequence groups to the waiting queue.
+        bg_logger.info(f"[ReuseStore] Add seq group {seq_group.request_id} to waiting queue")
         self.waiting.append(seq_group)
 
     def abort_seq_group(self, request_id: Union[str, Iterable[str]]) -> None:
@@ -945,7 +947,9 @@ class Scheduler:
         # Schedule sequence groups.
         # This function call changes the internal states of the scheduler
         # such as self.running, self.swapped, and self.waiting.
+        bg_logger.info("[Scheduler] 0 schedule start")
         scheduler_outputs = self._schedule()
+        bg_logger.info("[Scheduler] 1 _schedule finish")
         now = time.time()
 
         # Create input data structures.
@@ -966,11 +970,10 @@ class Scheduler:
                 seq_data[seq_id] = seq.data
                 block_tables[seq_id] = self.block_manager.get_block_table(seq)
                 self.block_manager.access_all_blocks_in_seq(seq, now)
-
+            bg_logger.info(f" [ReuseStore] ({len(self.waiting)} : {len(self.running)} : {len(self.swapped)}) block_table for SG {i}: {block_tables}")
             common_computed_block_nums = (
                 self.block_manager.get_common_computed_block_ids(
                     seq_group.get_seqs(status=SequenceStatus.RUNNING)))
-
             do_sample = True
             if seq_group.is_prefill():
                 seqs = seq_group.get_seqs()
@@ -1016,7 +1019,7 @@ class Scheduler:
         for scheduled_seq_group in scheduler_outputs.scheduled_seq_groups:
             self.block_manager.mark_blocks_as_computed(
                 scheduled_seq_group.seq_group)
-
+        bg_logger.info("[Scheduler] 3 Schedule finished.")
         return seq_group_metadata_list, scheduler_outputs
 
     def fork_seq(self, parent_seq: Sequence, child_seq: Sequence) -> None:

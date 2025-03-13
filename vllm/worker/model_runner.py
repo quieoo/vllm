@@ -159,8 +159,8 @@ class ModelRunner:
             )
 
         self.model_memory_usage = m.consumed_memory
-        logger.info("Loading model weights took %.4f GB",
-                    self.model_memory_usage / float(2**30))
+        # logger.info("Loading model weights took %.4f GB",
+        #             self.model_memory_usage / float(2**30))
 
         if self.lora_config:
             assert hasattr(self.model, "supported_lora_modules"

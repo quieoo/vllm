@@ -160,43 +160,43 @@ class LLMEngine:
         log_stats: bool,
         usage_context: UsageContext = UsageContext.ENGINE_CONTEXT,
     ) -> None:
-        logger.info(
-            "Initializing an LLM engine (v%s) with config: "
-            "model=%r, speculative_config=%r, tokenizer=%r, "
-            "skip_tokenizer_init=%s, tokenizer_mode=%s, revision=%s, "
-            "rope_scaling=%r, rope_theta=%r, tokenizer_revision=%s, "
-            "trust_remote_code=%s, dtype=%s, max_seq_len=%d, "
-            "download_dir=%r, load_format=%s, tensor_parallel_size=%d, "
-            "disable_custom_all_reduce=%s, quantization=%s, "
-            "enforce_eager=%s, kv_cache_dtype=%s, "
-            "quantization_param_path=%s, device_config=%s, "
-            "decoding_config=%r, seed=%d, served_model_name=%s)",
-            VLLM_VERSION,
-            model_config.model,
-            speculative_config,
-            model_config.tokenizer,
-            model_config.skip_tokenizer_init,
-            model_config.tokenizer_mode,
-            model_config.revision,
-            model_config.rope_scaling,
-            model_config.rope_theta,
-            model_config.tokenizer_revision,
-            model_config.trust_remote_code,
-            model_config.dtype,
-            model_config.max_model_len,
-            load_config.download_dir,
-            load_config.load_format,
-            parallel_config.tensor_parallel_size,
-            parallel_config.disable_custom_all_reduce,
-            model_config.quantization,
-            model_config.enforce_eager,
-            cache_config.cache_dtype,
-            model_config.quantization_param_path,
-            device_config.device,
-            decoding_config,
-            model_config.seed,
-            model_config.served_model_name,
-        )
+        # logger.info(
+        #     "Initializing an LLM engine (v%s) with config: "
+        #     "model=%r, speculative_config=%r, tokenizer=%r, "
+        #     "skip_tokenizer_init=%s, tokenizer_mode=%s, revision=%s, "
+        #     "rope_scaling=%r, rope_theta=%r, tokenizer_revision=%s, "
+        #     "trust_remote_code=%s, dtype=%s, max_seq_len=%d, "
+        #     "download_dir=%r, load_format=%s, tensor_parallel_size=%d, "
+        #     "disable_custom_all_reduce=%s, quantization=%s, "
+        #     "enforce_eager=%s, kv_cache_dtype=%s, "
+        #     "quantization_param_path=%s, device_config=%s, "
+        #     "decoding_config=%r, seed=%d, served_model_name=%s)",
+        #     VLLM_VERSION,
+        #     model_config.model,
+        #     speculative_config,
+        #     model_config.tokenizer,
+        #     model_config.skip_tokenizer_init,
+        #     model_config.tokenizer_mode,
+        #     model_config.revision,
+        #     model_config.rope_scaling,
+        #     model_config.rope_theta,
+        #     model_config.tokenizer_revision,
+        #     model_config.trust_remote_code,
+        #     model_config.dtype,
+        #     model_config.max_model_len,
+        #     load_config.download_dir,
+        #     load_config.load_format,
+        #     parallel_config.tensor_parallel_size,
+        #     parallel_config.disable_custom_all_reduce,
+        #     model_config.quantization,
+        #     model_config.enforce_eager,
+        #     cache_config.cache_dtype,
+        #     model_config.quantization_param_path,
+        #     device_config.device,
+        #     decoding_config,
+        #     model_config.seed,
+        #     model_config.served_model_name,
+        # )
         # TODO(woosuk): Print more configs in debug mode.
         bg_logger.info("[LLMENGINE Init] 0 Start")
         self.model_config = model_config
