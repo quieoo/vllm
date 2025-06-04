@@ -288,6 +288,9 @@ class ModelRunner:
         num_prefills = 0
         num_prefill_tokens = 0
         num_decode_tokens = 0
+        
+        #ReuseStore
+        segmented_block_tables: List[List[int]] = []
 
         # The following fields are only for flashinfer
         # Please follow https://docs.flashinfer.ai/tutorials/kv_layout.html#page-layout
@@ -426,7 +429,14 @@ class ModelRunner:
                     # Prefill without chunked prefill or memory profiling.
                     block_table = []
                 block_tables.append(block_table)
-
+                # if(block_table != seq_group_metadata.block_tables[seq_id] or len(block_table) != 0):
+                #     bg_logger.info(f"[AsyncBlockManager] block_table is not empty or not equal to seq_group_metadata.block_tables[seq_id] {block_table} {seq_group_metadata.block_tables[seq_id]}")
+                
+                # ReuseStore：Note during the prefill stage, PagedAttention does not need block table, only slot mapping is necessary. But in SegmentedAttention, block table is always needed.
+                # 检查segmented_block_tables[seq_id]是否存在
+                if seq_group_metadata.segmented_block_tables is not None and seq_id in seq_group_metadata.segmented_block_tables:
+                    segmented_block_tables.append(seq_group_metadata.segmented_block_tables[seq_id])
+                                
                 seq_lens.append(sliding_seq_len)
                 context_lens.append(sliding_context_len)
                 query_len = sliding_seq_len - sliding_context_len
@@ -552,6 +562,21 @@ class ModelRunner:
                 dtype=torch.int,
                 device=self.device,
             )
+            # 计算最大长度前检查列表是否为空
+            if segmented_block_tables:
+                max_seg_block_table_len = max(len(block_table) for block_table in segmented_block_tables)
+                segmented_block_tables = make_tensor_with_pad(
+                    segmented_block_tables,
+                    max_len=max_seg_block_table_len,
+                    pad=0,
+                    dtype=torch.int64,
+                    device=self.device,
+                )
+            else:
+                max_seg_block_table_len = 0
+                # 创建一个空张量
+                segmented_block_tables = torch.tensor([], dtype=torch.int64, device=self.device)
+            # bg_logger.info(f"[ModelRunner] block_tables: {block_tables}, segmented_block_tables: {segmented_block_tables}")
         assert max_query_len > 0, ("query_lens: {}".format(query_lens))
 
         seq_lens_tensor = torch.tensor(seq_lens,
@@ -643,6 +668,10 @@ class ModelRunner:
                 context_lens_tensor=context_lens_tensor,
                 block_tables=block_tables,
                 use_cuda_graph=use_captured_graph,
+                segmented_block_tables=segmented_block_tables,
+                global_gpu_mem_handle=seq_group_metadata_list[0].global_gpu_mem_handle,
+                layer_id=0,
+                block_size=self.block_size,
             )
 
         if self.lora_config:

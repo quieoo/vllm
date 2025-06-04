@@ -19,6 +19,7 @@ class _Backend(enum.Enum):
     TORCH_SDPA = enum.auto()
     FLASHINFER = enum.auto()
     PALLAS = enum.auto()
+    SEGMENTEDXFORMERS = enum.auto()
 
 
 @lru_cache(maxsize=None)
@@ -90,7 +91,7 @@ def which_attn_to_use(
     """Returns which flash attention backend to use."""
     # Default case.
     selected_backend = _Backend.FLASH_ATTN
-    selected_backend=_Backend.XFORMERS
+    selected_backend=_Backend.XFORMERS  # 【ReuseStore】默认使用XFormers
 
     # Check the environment variable and override if specified
     backend_by_env_var: Optional[str] = envs.VLLM_ATTENTION_BACKEND

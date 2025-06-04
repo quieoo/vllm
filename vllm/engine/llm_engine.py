@@ -39,7 +39,9 @@ from vllm.usage.usage_lib import (UsageContext, is_usage_stats_enabled,
 from vllm.utils import Counter
 from vllm.version import __version__ as VLLM_VERSION
 from vllm.backgroud_logger import logger as bg_logger
-
+import concurrent.futures
+from sllm_store.torch import get_and_open_gpu_pool_handle
+import torch
 
 logger = init_logger(__name__)
 _LOCAL_LOGGING_INTERVAL_SEC = 5
@@ -211,6 +213,12 @@ class LLMEngine:
         self.decoding_config = decoding_config or DecodingConfig()
         self.log_stats = log_stats
 
+        # 【ReuseStore】获得gpu tenosr pool的基地址
+        async_executer = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        device_index = device_config.device.index if device_config.device.index is not None else torch.cuda.current_device()
+        gpu_mem_handle_future=async_executer.submit(get_and_open_gpu_pool_handle, device_index)
+        gpu_mem_handle = 0
+
         if not self.model_config.skip_tokenizer_init:
             self.tokenizer = self._init_tokenizer()
             self.detokenizer = Detokenizer(self.tokenizer)
@@ -223,6 +231,14 @@ class LLMEngine:
         self.generation_config_fields = _load_generation_config_dict(
             model_config)
         bg_logger.info("[LLMENGINE Init] 2 Generation Config")
+
+        if gpu_mem_handle_future is not None:
+            gpu_mem_handle = gpu_mem_handle_future.result()
+        if gpu_mem_handle == 0:
+            bg_logger.info("[LLMENGINE Init] GPU memory handle is 0, use default Store")
+        else:
+            bg_logger.info("[LLMENGINE Init] GPU memory handle is %d, use ReuseStore", gpu_mem_handle)
+        async_executer.shutdown()
 
         self.model_executor = executor_class(
             model_config=model_config,
@@ -237,9 +253,13 @@ class LLMEngine:
         )
         bg_logger.info("[LLMENGINE Init] 3 Create Model Executor")
 
-        if not self.model_config.embedding_mode:
+        self.model_executor.set_gpu_handle(gpu_mem_handle)
+
+        if not self.model_config.embedding_mode and gpu_mem_handle == 0:
             self._initialize_kv_caches()
             bg_logger.info("[LLMENGINE Init] 4 Initialize KV Caches")
+        
+
 
         # If usage stat is enabled, collect relevant info.
         if is_usage_stats_enabled():

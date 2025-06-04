@@ -387,3 +387,93 @@ void convert_fp8(torch::Tensor& dst_cache, torch::Tensor& src_cache,
     TORCH_CHECK(false, "Unsupported data type: ", kv_cache_dtype);
   }
 }
+namespace vllm {
+template <typename scalar_t, typename cache_t, Fp8KVCacheDataType kv_dt>
+__global__ void reshape_and_cache_segment_kernel(
+    const scalar_t* __restrict__ key, const scalar_t* __restrict__ value,
+    void* __restrict__ global_memory, const int64_t* __restrict__ slot_mapping,
+    const u_int64_t* __restrict__ block_tables, const int layer_id,
+    const int key_stride, const int value_stride, const int num_heads,
+    const int head_size, const int block_size, const int x,
+    const float kv_scale) {
+  const int64_t token_idx = blockIdx.x;
+  const int64_t slot_idx = slot_mapping[token_idx];
+  if (slot_idx < 0) {
+    // Padding token that should be ignored.
+    return;
+  }
+  const int64_t block_idx = slot_idx / block_size;  // logical block id
+  const int64_t block_offset = slot_idx % block_size;
+  u_int64_t phy_block_offset = block_tables[block_idx];
+  cache_t* block_key_ptr =
+      (cache_t*)((char*)global_memory + phy_block_offset) +
+      layer_id * num_heads * (head_size / x) * block_size * x * 2;
+  cache_t* block_value_ptr =
+      block_key_ptr + num_heads * (head_size / x) * block_size * x;
+
+  const int n = num_heads * head_size;
+  for (int i = threadIdx.x; i < n; i += blockDim.x) {
+    const int64_t src_key_idx = token_idx * key_stride + i;
+    const int64_t src_value_idx = token_idx * value_stride + i;
+    scalar_t tgt_key = key[src_key_idx];
+    scalar_t tgt_value = value[src_value_idx];
+
+    const int head_idx = i / head_size;
+    const int head_offset = i % head_size;
+    const int x_idx = head_offset / x;
+    const int x_offset = head_offset % x;
+
+    cache_t* key_cache_ptr =
+        block_key_ptr + head_idx * (head_size / x) * block_size * x +
+        x_idx * block_size * x + block_offset * x + x_offset;
+
+    cache_t* value_cache_ptr = block_value_ptr +
+                               head_idx * head_size * block_size +
+                               head_offset * block_size + block_offset;
+
+    if constexpr (kv_dt == Fp8KVCacheDataType::kAuto) {
+      key_cache_ptr[0] = tgt_key;
+      value_cache_ptr[0] = tgt_value;
+    } else {
+      key_cache_ptr[0] =
+          fp8::scaled_convert<cache_t, scalar_t, kv_dt>(tgt_key, kv_scale);
+      value_cache_ptr[0] =
+          fp8::scaled_convert<cache_t, scalar_t, kv_dt>(tgt_value, kv_scale);
+    }
+  }
+}
+}  // namespace vllm
+
+#define CALL_RESHAPE_AND_CACHE_SEGMENT(KV_T, CACHE_T, KV_DTYPE)          \
+  vllm::reshape_and_cache_segment_kernel<KV_T, CACHE_T, KV_DTYPE>        \
+      <<<grid, block, 0, stream>>>(                                      \
+          reinterpret_cast<KV_T*>(key.data_ptr()),                       \
+          reinterpret_cast<KV_T*>(value.data_ptr()),                     \
+          reinterpret_cast<void*>(global_memory),                        \
+          slot_mapping.data_ptr<int64_t>(),                              \
+          reinterpret_cast<uint64_t*>(block_tables.data_ptr<int64_t>()), \
+          layer_id, key_stride, value_stride, num_heads, head_size,      \
+          block_size, 16 / sizeof(CACHE_T), kv_scale);
+
+void reshape_and_cache_segment(
+    torch::Tensor& key,           // [num_tokens, num_heads, head_size]
+    torch::Tensor& value,         // [num_tokens, num_heads, head_size]
+    int64_t global_memory,        // global memory pointer
+    torch::Tensor& block_tables,  // [num_seqs, max_num_blocks_per_seq]
+    int64_t layer_id,             // layer id
+    torch::Tensor& slot_mapping,  // [num_tokens]
+    int64_t block_size,           // number of slots in a block
+    const std::string& kv_cache_dtype, const double kv_scale) {
+  int num_tokens = key.size(0);
+  int num_heads = key.size(1);
+  int head_size = key.size(2);
+  int key_stride = key.stride(0);
+  int value_stride = value.stride(0);
+  dim3 grid(num_tokens);
+  dim3 block(std::min(num_heads * head_size, 512));
+  const at::cuda::OptionalCUDAGuard device_guard(device_of(key));
+  const cudaStream_t stream = at::cuda::getCurrentCUDAStream();
+
+  DISPATCH_BY_KV_CACHE_DTYPE(key.dtype(), kv_cache_dtype,
+                             CALL_RESHAPE_AND_CACHE_SEGMENT)
+}

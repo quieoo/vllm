@@ -250,6 +250,7 @@ class Qwen2Model(nn.Module):
         hidden_states = self.embed_tokens(input_ids)
         residual = None
         for i in range(len(self.layers)):
+            attn_metadata.layer_id=i    # [ReuseStore]: 每次进入新的layer，更新layer_id
             layer = self.layers[i]
             hidden_states, residual = layer(
                 positions,

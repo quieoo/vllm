@@ -28,6 +28,9 @@ class GPUExecutor(ExecutorBase):
         self.driver_worker.load_model()
         bg_logger.info("[GPUExecuter Init] 3 Load model")
 
+    def set_gpu_handle(self, gpu_handle) -> None:
+        self.driver_worker.set_gpu_handle(gpu_handle)
+
     def _get_worker_kwargs(
             self,
             local_rank: int = 0,

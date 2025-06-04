@@ -47,6 +47,19 @@ TORCH_LIBRARY_EXPAND(TORCH_EXTENSION_NAME, ops) {
       "    int blocksparse_head_sliding_step) -> ()");
   ops.impl("paged_attention_v2", torch::kCUDA, &paged_attention_v2);
 
+  ops.def(
+      "segmented_attention_v1("
+      "    Tensor! out, Tensor query, int global_memory,"
+      "    int num_kv_heads, float scale,"
+      "    Tensor block_tables, int layer_id,"
+      "    Tensor seq_lens, int block_size,"
+      "    int max_seq_len, Tensor? alibi_slopes,"
+      "    str kv_cache_dtype, float kv_scale, int tp_rank,"
+      "    int blocksparse_local_blocks,"
+      "    int blocksparse_vert_stride, int blocksparse_block_size,"
+      "    int blocksparse_head_sliding_step) -> ()");
+
+  ops.impl("segmented_attention_v1", torch::kCUDA, &segmented_attention_v1);
   // Activation ops
   // Activation function used in SwiGLU.
   ops.def("silu_and_mul(Tensor! out, Tensor input) -> ()");
@@ -227,6 +240,16 @@ TORCH_LIBRARY_EXPAND(CONCAT(TORCH_EXTENSION_NAME, _cache_ops), cache_ops) {
       "convert_fp8(Tensor! dst_cache, Tensor src_cache, float scale, str "
       "kv_cache_dtype) -> ()");
   cache_ops.impl("convert_fp8", torch::kCUDA, &convert_fp8);
+
+  cache_ops.def(
+      "reshape_and_cache_segment(Tensor key, Tensor value, int "
+      "global_memory,"
+      "                         Tensor block_tables, int layer_id,"
+      "                         Tensor slot_mapping, int block_size,"
+      "                         str kv_cache_dtype, float kv_scale) -> ()");
+
+  cache_ops.impl("reshape_and_cache_segment", torch::kCUDA,
+                 &reshape_and_cache_segment);
 }
 
 TORCH_LIBRARY_EXPAND(CONCAT(TORCH_EXTENSION_NAME, _cuda_utils), cuda_utils) {

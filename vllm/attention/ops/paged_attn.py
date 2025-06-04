@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from dataclasses import dataclass, field
+from typing import List, Optional, Tuple, Any
 
 import torch
 
@@ -25,6 +25,15 @@ class PagedAttentionMetadata:
     # 2nd dimensions are padded up to max_blocks_per_seq if it is cuda-graph
     # captured.
     block_tables: Optional[torch.Tensor]
+    
+        
+    # For ReuseStore:
+    # segmented_block_tables is composed of multiple sub-table, for each layer
+    # each sub-table tracks the global offset of the sub-kv-block
+    global_gpu_mem_handle: int
+    segmented_block_tables: List[torch.Tensor]
+    layer_id: Optional[int]
+    block_size: int
 
 
 class PagedAttention:
@@ -78,6 +87,30 @@ class PagedAttention:
             kv_cache_dtype,
             kv_scale,
         )
+    @staticmethod
+    def write_to_segmented_cache(
+        key: torch.Tensor,
+        value: torch.Tensor,
+        global_mem_handle: Any,
+        block_tables: torch.Tensor,
+        layer_id: int,
+        slot_mapping: torch.Tensor,
+        block_size: int,
+        kv_cache_dtype: str,
+        kv_scale: float,
+    ) -> None:
+        ops.reshape_and_cache_segment(
+            key,
+            value,
+            global_mem_handle,
+            block_tables,
+            layer_id,
+            slot_mapping.flatten(),
+            block_size,
+            kv_cache_dtype,
+            kv_scale,
+        )
+
 
     @staticmethod
     def forward_decode(

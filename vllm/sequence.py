@@ -667,6 +667,12 @@ class SequenceGroupMetadata:
                 self._token_chunk_size = list(seq_data.values())[0].get_len()
             else:
                 self._token_chunk_size = 1
+        
+        # For ReuseStore:
+        # segmented_block_tables is composed of multiple sub-table, for each layer
+        # each sub-table tracks the global offset of the sub-kv-block
+        self.global_gpu_mem_handle: int = 0
+        self.segmented_block_tables: Dict[int, List[int]] = {}
 
     @property
     def lora_int_id(self) -> int:

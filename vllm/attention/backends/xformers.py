@@ -13,6 +13,8 @@ from vllm.attention.backends.abstract import (AttentionBackend, AttentionImpl,
 from vllm.attention.ops.paged_attn import (PagedAttention,
                                            PagedAttentionMetadata)
 from vllm.logger import init_logger
+from vllm.backgroud_logger import logger as bg_logger
+from vllm import _custom_ops as ops
 
 logger = init_logger(__name__)
 
@@ -145,6 +147,10 @@ class XFormersMetadata(AttentionMetadata, PagedAttentionMetadata):
             context_lens_tensor=self.context_lens_tensor[:self.num_prefills],
             block_tables=self.block_tables[:self.num_prefills],
             use_cuda_graph=False,
+            segmented_block_tables=self.segmented_block_tables,
+            global_gpu_mem_handle=self.global_gpu_mem_handle,
+            layer_id=self.layer_id,
+            block_size=self.block_size,
         )
         return self._cached_prefill_metadata
 
@@ -173,6 +179,10 @@ class XFormersMetadata(AttentionMetadata, PagedAttentionMetadata):
             context_lens_tensor=None,
             block_tables=self.block_tables[self.num_prefills:],
             use_cuda_graph=self.use_cuda_graph,
+            segmented_block_tables=self.segmented_block_tables,
+            global_gpu_mem_handle=self.global_gpu_mem_handle,
+            layer_id=self.layer_id,
+            block_size=self.block_size,
         )
         return self._cached_decode_metadata
 
@@ -234,7 +244,88 @@ class XFormersImpl(AttentionImpl[XFormersMetadata]):
             raise ValueError(
                 f"Head size {head_size} is not supported by PagedAttention. "
                 f"Supported head sizes are: {suppored_head_sizes}.")
+        # bg_logger.info(f"[XFormers] : XFormersImpl initialize params: {locals()}")
 
+# 调用SegmentedAttention
+    # def forward(
+    #     self,
+    #     query: torch.Tensor,
+    #     key: torch.Tensor,
+    #     value: torch.Tensor,
+    #     kv_cache: Optional[torch.Tensor],
+    #     attn_metadata: "XFormersMetadata",
+    #     kv_scale: float = 1.0,
+    # ) -> torch.Tensor:
+    #     """Forward pass with xFormers and PagedAttention.
+
+    #     Args:
+    #         query: shape = [num_tokens, num_heads * head_size]
+    #         key: shape = [num_tokens, num_kv_heads * head_size]
+    #         value: shape = [num_tokens, num_kv_heads * head_size]
+    #         kv_cache = [2, num_blocks, block_size * num_kv_heads * head_size]
+    #         attn_metadata: Metadata for attention.
+    #     Returns:
+    #         shape = [num_tokens, num_heads * head_size]
+    #     """
+    #     query = query.view(-1, self.num_heads, self.head_size)
+    #     key = key.view(-1, self.num_kv_heads, self.head_size)
+    #     value = value.view(-1, self.num_kv_heads, self.head_size)
+    #     # bg_logger.info(f"[XFormers] : attn_metadata {attn_metadata}")
+        
+    #     # 更新KV Cache
+    #     ops.reshape_and_cache_segment(key, value, attn_metadata.global_gpu_mem_handle, attn_metadata.segmented_block_tables, attn_metadata.layer_id, attn_metadata.slot_mapping, attn_metadata.block_size, self.kv_cache_dtype, kv_scale)
+
+    #     num_prefill_tokens = attn_metadata.num_prefill_tokens
+    #     num_decode_tokens = attn_metadata.num_decode_tokens
+    #     assert key.shape[0] == num_prefill_tokens + num_decode_tokens
+    #     assert value.shape[0] == num_prefill_tokens + num_decode_tokens
+
+    #     output = torch.empty_like(query)
+    #     # Query for decode. KV is not needed because it is already cached.
+    #     decode_query = query[num_prefill_tokens:]
+    #     # QKV for prefill.
+    #     query = query[:num_prefill_tokens]
+    #     key = key[:num_prefill_tokens]
+    #     value = value[:num_prefill_tokens]
+
+    #     assert query.shape[0] == num_prefill_tokens
+    #     assert decode_query.shape[0] == num_decode_tokens
+
+    #     if prefill_meta := attn_metadata.prefill_metadata:
+    #         # Prompt run.
+    #         out = self._run_memory_efficient_xformers_forward(
+    #             query, key, value, prefill_meta)
+    #         assert out.shape == output[:num_prefill_tokens].shape
+    #         output[:num_prefill_tokens] = out
+            
+    #     if decode_meta := attn_metadata.decode_metadata:
+    #         output_segmentd = torch.empty_like(decode_query)
+    #         ops.segmented_attention_v1(
+    #             output_segmentd,
+    #             decode_query,
+    #             attn_metadata.global_gpu_mem_handle,
+    #             self.num_kv_heads,
+    #             self.scale,
+    #             attn_metadata.segmented_block_tables,
+    #             attn_metadata.layer_id,
+    #             decode_meta.seq_lens_tensor,
+    #             attn_metadata.block_size,
+    #             decode_meta.max_decode_seq_len,
+    #             self.alibi_slopes,
+    #             self.kv_cache_dtype,
+    #             kv_scale,
+    #             0,
+    #             0,
+    #             0,
+    #             64,
+    #             0
+    #         )
+    #         output[num_prefill_tokens:] = output_segmentd
+            
+    #     # Reshape the output tensor.
+    #     return output.view(-1, self.num_heads * self.head_size)
+
+# 旧版的forward函数，调用PagedAttention
     def forward(
         self,
         query: torch.Tensor,
@@ -258,7 +349,7 @@ class XFormersImpl(AttentionImpl[XFormersMetadata]):
         query = query.view(-1, self.num_heads, self.head_size)
         key = key.view(-1, self.num_kv_heads, self.head_size)
         value = value.view(-1, self.num_kv_heads, self.head_size)
-        # print(f"[XFormers] : attn_metadata {attn_metadata}")
+        # bg_logger.info(f"[XFormers] : attn_metadata {attn_metadata}")
         if kv_cache is not None:
             key_cache, value_cache = PagedAttention.split_kv_cache(
                 kv_cache, self.num_kv_heads, self.head_size)
@@ -266,10 +357,16 @@ class XFormersImpl(AttentionImpl[XFormersMetadata]):
             # Reshape the input keys and values and store them in the cache.
             # If kv_cache is not provided, the new key and value tensors are
             # not cached. This happens during the initial memory profiling run.
+            # bg_logger.info(f"[XFormers] :key type {key.dtype}, kv_cache_type {self.kv_cache_dtype}")
+            # key type torch.float16, kv_cache_type auto
+            
             PagedAttention.write_to_paged_cache(key, value, key_cache,
                                                 value_cache,
                                                 attn_metadata.slot_mapping,
                                                 self.kv_cache_dtype, kv_scale)
+        else:
+            ops.reshape_and_cache_segment(key, value, attn_metadata.global_gpu_mem_handle, attn_metadata.segmented_block_tables, attn_metadata.layer_id, attn_metadata.slot_mapping, attn_metadata.block_size, self.kv_cache_dtype, kv_scale)
+
 
         num_prefill_tokens = attn_metadata.num_prefill_tokens
         num_decode_tokens = attn_metadata.num_decode_tokens
@@ -301,6 +398,7 @@ class XFormersImpl(AttentionImpl[XFormersMetadata]):
                 assert out.shape == output[:num_prefill_tokens].shape
                 output[:num_prefill_tokens] = out
             else:
+                # 不会被使用
                 # prefix-enabled attention
                 # TODO(Hai) this triton kernel has regression issue (broke) to
                 # deal with different data types between KV and FP8 KV cache,
@@ -323,19 +421,49 @@ class XFormersImpl(AttentionImpl[XFormersMetadata]):
                 output[:num_prefill_tokens] = out
 
         if decode_meta := attn_metadata.decode_metadata:
-            output[num_prefill_tokens:] = PagedAttention.forward_decode(
-                decode_query,
-                key_cache,
-                value_cache,
-                decode_meta.block_tables,
-                decode_meta.seq_lens_tensor,
-                decode_meta.max_decode_seq_len,
-                self.kv_cache_dtype,
-                self.num_kv_heads,
-                self.scale,
-                self.alibi_slopes,
-                kv_scale,
-            )
+            if kv_cache is not None:
+            # 使用segmented attention执行解码
+                output_decode=PagedAttention.forward_decode(
+                    decode_query,
+                    key_cache,
+                    value_cache,
+                    decode_meta.block_tables,
+                    decode_meta.seq_lens_tensor,
+                    decode_meta.max_decode_seq_len,
+                    self.kv_cache_dtype,
+                    self.num_kv_heads,
+                    self.scale,
+                    self.alibi_slopes,
+                    kv_scale,
+                )
+            else:
+                output_decode = torch.empty_like(decode_query)
+                ops.segmented_attention_v1(
+                    output_decode,
+                    decode_query,
+                    attn_metadata.global_gpu_mem_handle,
+                    self.num_kv_heads,
+                    self.scale,
+                    attn_metadata.segmented_block_tables,
+                    attn_metadata.layer_id,
+                    decode_meta.seq_lens_tensor,
+                    attn_metadata.block_size,
+                    decode_meta.max_decode_seq_len,
+                    self.alibi_slopes,
+                    self.kv_cache_dtype,
+                    kv_scale,
+                    0,
+                    0,
+                    0,
+                    64,
+                    0
+                )
+            # 比较output_segment和output_original是否相同
+            # if not torch.allclose(output_segmentd, output_original, atol=1e-6):
+            #     bg_logger.error(f"[XFormers]: output_segmentd and output_original are not equal: {torch.allclose(output_segmentd, output_original, atol=1e-6)}")
+            
+            output[num_prefill_tokens:] = output_decode
+            
 
         # Reshape the output tensor.
         return output.view(-1, self.num_heads * self.head_size)

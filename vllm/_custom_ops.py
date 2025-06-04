@@ -1,6 +1,6 @@
 import contextlib
 import functools
-from typing import List, Optional, Tuple, Type
+from typing import List, Optional, Tuple, Type, Any
 
 import torch
 
@@ -124,6 +124,31 @@ def paged_attention_v2(
         blocksparse_local_blocks, blocksparse_vert_stride,
         blocksparse_block_size, blocksparse_head_sliding_step)
 
+def segmented_attention_v1(
+    out: torch.Tensor,
+    query: torch.Tensor,
+    global_memory: int,
+    num_kv_heads: int,
+    scale: float,
+    block_tables: torch.Tensor,
+    layer_id: int,
+    seq_lens: torch.Tensor,
+    block_size: int,
+    max_seq_len: int,
+    alibi_slopes: Optional[torch.Tensor],
+    kv_cache_dtype: str,
+    kv_scale: float,
+    tp_rank: int = 0,
+    blocksparse_local_blocks: int = 0,
+    blocksparse_vert_stride: int = 0,
+    blocksparse_block_size: int = 64,
+    blocksparse_head_sliding_step: int = 0,
+) -> None:
+    torch.ops._C.segmented_attention_v1(
+        out, query, global_memory, num_kv_heads, scale, block_tables, layer_id,
+        seq_lens, block_size, max_seq_len, alibi_slopes, kv_cache_dtype,
+        kv_scale, tp_rank, blocksparse_local_blocks, blocksparse_vert_stride,
+        blocksparse_block_size, blocksparse_head_sliding_step)
 
 # pos encoding ops
 def rotary_embedding(
@@ -389,6 +414,22 @@ def convert_fp8(output: torch.Tensor,
                 kv_dtype: str = "fp8") -> None:
     torch.ops._C_cache_ops.convert_fp8(output, input, scale, kv_dtype)
 
+def reshape_and_cache_segment(
+    key: torch.Tensor,
+    value: torch.Tensor,
+    global_memory: int,
+    block_tabls: torch.Tensor,
+    layer_id: int,
+    slot_mapping: torch.Tensor,
+    block_size: int,
+    kv_cache_dtype: str,
+    kv_scale: float,
+) -> None:
+    torch.ops._C_cache_ops.reshape_and_cache_segment(key, value, global_memory,
+                                                     block_tabls, layer_id,
+                                                     slot_mapping,
+                                                     block_size, kv_cache_dtype,
+                                                     kv_scale)
 
 def get_device_attribute(attribute: int, device: int) -> int:
     return torch.ops._C_cuda_utils.get_device_attribute(attribute, device)

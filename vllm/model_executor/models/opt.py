@@ -316,7 +316,9 @@ class OPTDecoder(nn.Module):
         hidden_states = inputs_embeds + pos_embeds
         logger.info(f"[OPT Decoder forward] 5 : Add token and positional embeddings")
 
+
         for i in range(len(self.layers)):
+            attn_metadata.layer_id=i    # [ReuseStore]: 每次进入新的layer，更新layer_id
             layer = self.layers[i]
             hidden_states = layer(hidden_states, kv_caches[i], attn_metadata)
             logger.info(f"[OPT Decoder forward] 6.{i} : Decoder layer {i}")

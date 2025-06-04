@@ -528,8 +528,17 @@ def make_tensor_with_pad(
     The padding is applied to the end of each inner list until it reaches
     `max_len`.
     """
-    padded_x = np.zeros([len(x), max_len], dtype=np.int32) + pad
+    torch_to_np_dtype = {
+        torch.int32: np.int32,
+        torch.int64: np.int64,
+        torch.float: np.float32,
+        torch.float16: np.float16,
+        torch.bfloat16: np.float32,
+    }
+    np_dtype = torch_to_np_dtype.get(dtype, np.int32)
+    padded_x = np.zeros([len(x), max_len], dtype=np_dtype) + pad
     for ind, blocktb in enumerate(x):
+        # print(f"len(blocktb)={len(blocktb)}, max_len={max_len}")
         assert len(blocktb) <= max_len
         padded_x[ind, :len(blocktb)] = blocktb
     return torch.tensor(padded_x, dtype=dtype, device=device)

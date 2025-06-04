@@ -92,6 +92,11 @@ class CacheEngine:
     def copy(self, src_to_dsts: torch.Tensor) -> None:
         self.attn_backend.copy_blocks(self.gpu_cache, src_to_dsts)
 
+    def get_x(self) -> int:
+        # create a temp tensor with self.dtype
+        temp_tensor = torch.empty(0, dtype=self.dtype)
+        return 16 // temp_tensor.element_size()
+
     @staticmethod
     def get_cache_block_size(
         cache_config: CacheConfig,

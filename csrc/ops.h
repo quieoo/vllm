@@ -23,6 +23,22 @@ void paged_attention_v2(
     const int64_t blocksparse_vert_stride, const int64_t blocksparse_block_size,
     const int64_t blocksparse_head_sliding_step);
 
+void segmented_attention_v1(
+    torch::Tensor& out,    // [num_seqs, num_heads, head_size]
+    torch::Tensor& query,  // [num_seqs, num_heads, head_size]
+    int64_t global_memory,
+    int64_t num_kv_heads,  // [num_heads]
+    double scale,
+    torch::Tensor& block_tables,  // [num_seqs, max_num_blocks_per_seq]
+    int64_t layer_id,
+    torch::Tensor& seq_lens,  // [num_seqs]
+    int64_t block_size, int64_t max_seq_len,
+    const c10::optional<torch::Tensor>& alibi_slopes,
+    const std::string& kv_cache_dtype, double kv_scale, const int64_t tp_rank,
+    const int64_t blocksparse_local_blocks,
+    const int64_t blocksparse_vert_stride, const int64_t blocksparse_block_size,
+    const int64_t blocksparse_head_sliding_step);
+
 void rms_norm(torch::Tensor& out, torch::Tensor& input, torch::Tensor& weight,
               double epsilon);
 

@@ -26,8 +26,7 @@ from vllm.worker.worker_base import WorkerBase
 from vllm.backgroud_logger import logger as bg_logger
 from sllm_store.torch import get_and_open_gpu_pool_handle, close_gpu_pool_handle
 from vllm.core.async_block_manager import AsyncBlockManager
-import threading
-import concurrent.futures
+
 
 
 
@@ -39,8 +38,9 @@ class Worker(WorkerBase):
     distributed inference, each worker is assigned a partition of the model.
     """
     def __del__(self):
-        close_gpu_pool_handle()
-        self.async_executer.shutdown()
+        if self.gpu_mem_handle!=0:
+            close_gpu_pool_handle()
+        # self.async_executer.shutdown()
         bg_logger.info(f"[ReuseStore] close gpu pool handle in worker")
     def __init__(
         self,
@@ -101,10 +101,19 @@ class Worker(WorkerBase):
         # Initialize gpu_cache as embedding models don't initialize kv_caches
         self.gpu_cache: Optional[List[torch.tensor]] = None
 
-        self.async_executer = concurrent.futures.ThreadPoolExecutor(max_workers=1)
-        self.gpu_mem_handle_future = None
+        # self.async_executer = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        # self.gpu_mem_handle_future = None
         self.gpu_mem_handle = None
         self.async_block_manager = AsyncBlockManager(CacheEngine.get_cache_block_size(self.cache_config,self.model_config,self.parallel_config), self.model_config.model, self.local_rank)
+
+    def set_gpu_handle(self, gpu_handle) -> None:
+        self.gpu_mem_handle = gpu_handle
+        if self.gpu_mem_handle!=0:
+            # 使用ReuseStore，gpu_cache不会被初始化,将其设置为对应层数的None值
+            num_layers = self.model_config.get_num_layers(self.parallel_config)
+            self.gpu_cache = [None] * num_layers
+            self.async_block_manager.load_available_block()
+        
 
     def init_device(self) -> None:
         if self.device_config.device.type == "cuda":
@@ -123,10 +132,7 @@ class Worker(WorkerBase):
 
             _check_if_gpu_supports_dtype(self.model_config.dtype)
             # torch.cuda.empty_cache()
-            self.gpu_mem_handle_future=self.async_executer.submit(get_and_open_gpu_pool_handle, self.local_rank)
-            # self.get_mem_handle_thread = threading.Thread(target=get_and_open_gpu_pool_handle, args=(self.local_rank,))
-            # self.get_mem_handle_thread.daemon = True
-            # self.get_mem_handle_thread.start()
+            # self.gpu_mem_handle_future=self.async_executer.submit(get_and_open_gpu_pool_handle, self.local_rank)
             bg_logger.info(f"[ReuseStore] get and open gpu pool handle for device-{self.local_rank} in the background")
 
             self.init_gpu_memory = torch.cuda.mem_get_info()[0]
@@ -142,7 +148,7 @@ class Worker(WorkerBase):
 
     def load_model(self):
         self.model_runner.load_model()
-        self.async_block_manager.load_available_block()
+        
 
     def save_sharded_state(
         self,
@@ -189,13 +195,14 @@ class Worker(WorkerBase):
             by adjusting the `gpu_memory_utilization` parameter.
         """
         # align with ReuseStore
-        free_gpu_memory, total_gpu_memory = torch.cuda.mem_get_info()
-        cache_block_size = self.get_cache_block_size_bytes()
-        num_gpu_blocks = int(free_gpu_memory * 0.5 // cache_block_size)
-        num_cpu_blocks = int(self.cache_config.swap_space_bytes //
-                             cache_block_size)
+    #     [2025/6/3] no need any more
+        # free_gpu_memory, total_gpu_memory = torch.cuda.mem_get_info()
+        # cache_block_size = self.get_cache_block_size_bytes()
+        # num_gpu_blocks = int(free_gpu_memory * 0.5 // cache_block_size)
+        # num_cpu_blocks = int(self.cache_config.swap_space_bytes //
+        #                      cache_block_size)
         
-        return num_gpu_blocks, num_cpu_blocks
+        # return num_gpu_blocks, num_cpu_blocks
 
 
 
@@ -282,15 +289,6 @@ class Worker(WorkerBase):
     ) -> List[Union[SamplerOutput, PoolerOutput]]:
         
         bg_logger.info("[Worker ExecuteModel] 0 : Start execute model")
-        # if self.get_mem_handle_thread is not None:
-        #     self.get_mem_handle_thread.join()
-
-        # make sure the gpu pool handle is ready
-        if self.gpu_mem_handle_future is not None:
-            bg_logger.info("[Worker ExecuteModel] 0.1 : Waiting for get_mem_handle_thread to finish")
-            self.gpu_mem_handle = self.gpu_mem_handle_future.result()
-            bg_logger.info("[Worker ExecuteModel] 0.2 : gpu pool handle is ready")
-            
 
         if not self.is_driver_worker:
             self._execute_model_non_driver()
@@ -309,15 +307,31 @@ class Worker(WorkerBase):
         num_seq_groups = len(seq_group_metadata_list)
         bg_logger.info("[Worker ExecuteModel] 1 : Get seq_group_metadata_list")
         
-        blocks = []
-        for seq_group_metadata in execute_model_req.seq_group_metadata_list:
-            for block_list in seq_group_metadata.block_tables.values():
-                blocks.extend(block_list)
-        self.async_block_manager.check_allocate_blocks(blocks)
+        #ReuseStore: update the segmented block tables
+        if self.gpu_mem_handle!=0:
+            blocks = [] #global offsets
+            for seq_group_metadata in seq_group_metadata_list:
+                for block_list in seq_group_metadata.block_tables.values():
+                    blocks.extend(block_list)
+            # vllm block ids -> global block offsets
+            block_mapping=self.async_block_manager.check_allocate_blocks(blocks)
         
+            for sg_id in range(num_seq_groups):
+                for seq_id, block_table in seq_group_metadata_list[sg_id].block_tables.items():
+                    segmented_block_table = []
+                    for block_id in block_table:
+                        segmented_block_table.append(block_mapping[block_id])
+                    seq_group_metadata_list[sg_id].segmented_block_tables[seq_id] = segmented_block_table
+                seq_group_metadata_list[sg_id].global_gpu_mem_handle = self.gpu_mem_handle
         
         # `blocks_to_swap_in` and `blocks_to_swap_out` are cpu tensors.
         # they contain parameters to launch cudamemcpyasync.
+        if(execute_model_req.blocks_to_swap_in is not None):
+            bg_logger.info(f"[Worker ExecuteModel] TODO: blocks_to_swap_in is not None")
+        if(execute_model_req.blocks_to_swap_out is not None):
+            bg_logger.info(f"[Worker ExecuteModel] TODO: blocks_to_swap_out is not None")
+        if(execute_model_req.blocks_to_copy is not None):
+            bg_logger.info(f"[Worker ExecuteModel] TODO: blocks_to_copy is not None")
         blocks_to_swap_in = torch.tensor(execute_model_req.blocks_to_swap_in,
                                          device="cpu",
                                          dtype=torch.int64).view(-1, 2)
@@ -347,8 +361,11 @@ class Worker(WorkerBase):
         if num_seq_groups == 0:
             return []
         bg_logger.info("[Worker ExecuteModel] 5 : Begin to Call Model Runner")
-        output = self.model_runner.execute_model(seq_group_metadata_list,
-                                                 self.gpu_cache)
+        # ReuseStore: replace the gpu_cache with list of layer_ids
+        output = self.model_runner.execute_model(seq_group_metadata_list, self.gpu_cache)
+        # layer_ids = torch.arange(len(self.gpu_cache), dtype=torch.int32, device=self.device)
+        # output = self.model_runner.execute_model(layer_ids,self.gpu_cache)
+        
         bg_logger.info("[Worker ExecuteModel] 6 : Call Model Runner Finish")
 
         # Worker only supports single-step execution. Wrap the output in a list

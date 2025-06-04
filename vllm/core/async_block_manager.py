@@ -6,7 +6,7 @@ import os
 class AsyncBlockManager:
     def __init__(self, block_size, model_name, device_id):
         # the block size has already multiplied by the number of layers
-        self.block_size = block_size    
+        self.block_size = block_size    # 2 *  block_size(num of slots in one block) * num_kv_heads * head_size * sizeof(cache_t)
         self.model_path=os.path.join(model_name, "rank_0")
         self.device_id = device_id
         self.store = SllmStoreClient("127.0.0.1:8073")
