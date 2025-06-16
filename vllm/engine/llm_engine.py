@@ -42,6 +42,7 @@ from vllm.backgroud_logger import logger as bg_logger
 import concurrent.futures
 from sllm_store.torch import get_and_open_gpu_pool_handle
 import torch
+import time
 
 logger = init_logger(__name__)
 _LOCAL_LOGGING_INTERVAL_SEC = 5
@@ -200,7 +201,7 @@ class LLMEngine:
         #     model_config.served_model_name,
         # )
         # TODO(woosuk): Print more configs in debug mode.
-        bg_logger.info("[LLMENGINE Init] 0 Start")
+        bg_logger.info(f"[LLMENGINE Init] 0 Start {time.time()}")
         self.model_config = model_config
         self.cache_config = cache_config
         self.lora_config = lora_config
@@ -213,11 +214,7 @@ class LLMEngine:
         self.decoding_config = decoding_config or DecodingConfig()
         self.log_stats = log_stats
 
-        # 【ReuseStore】获得gpu tenosr pool的基地址
-        async_executer = concurrent.futures.ThreadPoolExecutor(max_workers=1)
-        device_index = device_config.device.index if device_config.device.index is not None else torch.cuda.current_device()
-        gpu_mem_handle_future=async_executer.submit(get_and_open_gpu_pool_handle, device_index)
-        gpu_mem_handle = 0
+
 
         if not self.model_config.skip_tokenizer_init:
             self.tokenizer = self._init_tokenizer()
@@ -232,14 +229,6 @@ class LLMEngine:
             model_config)
         bg_logger.info("[LLMENGINE Init] 2 Generation Config")
 
-        if gpu_mem_handle_future is not None:
-            gpu_mem_handle = gpu_mem_handle_future.result()
-        if gpu_mem_handle == 0:
-            bg_logger.info("[LLMENGINE Init] GPU memory handle is 0, use default Store")
-        else:
-            bg_logger.info("[LLMENGINE Init] GPU memory handle is %d, use ReuseStore", gpu_mem_handle)
-        async_executer.shutdown()
-
         self.model_executor = executor_class(
             model_config=model_config,
             cache_config=cache_config,
@@ -251,16 +240,25 @@ class LLMEngine:
             speculative_config=speculative_config,
             load_config=load_config,
         )
-        bg_logger.info("[LLMENGINE Init] 3 Create Model Executor")
+        bg_logger.info(f"[LLMENGINE Init] 3 Create Model Executor. Start Init KV Cache {time.time()}")
 
+        # 【ReuseStore】获得gpu tenosr pool的基地址
+        device_index = device_config.device.index if device_config.device.index is not None else torch.cuda.current_device()
+        gpu_mem_handle = 0
+        try:
+            gpu_mem_handle = get_and_open_gpu_pool_handle(device_index)
+        except Exception as e:
+            bg_logger.info(f"Failed to get GPU memory handle: {e}")
+        if gpu_mem_handle == 0:
+            bg_logger.info("[LLMENGINE Init] GPU memory handle is 0, use default Store")
+        else:
+            bg_logger.info("[LLMENGINE Init] GPU memory handle is %d, use ReuseStore", gpu_mem_handle)
         self.model_executor.set_gpu_handle(gpu_mem_handle)
 
-        if not self.model_config.embedding_mode and gpu_mem_handle == 0:
+        if not self.model_config.embedding_mode:
             self._initialize_kv_caches()
             bg_logger.info("[LLMENGINE Init] 4 Initialize KV Caches")
         
-
-
         # If usage stat is enabled, collect relevant info.
         if is_usage_stats_enabled():
             from vllm.model_executor.model_loader import (

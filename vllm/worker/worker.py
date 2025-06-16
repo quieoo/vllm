@@ -106,6 +106,11 @@ class Worker(WorkerBase):
         self.gpu_mem_handle = None
         self.async_block_manager = AsyncBlockManager(CacheEngine.get_cache_block_size(self.cache_config,self.model_config,self.parallel_config), self.model_config.model, self.local_rank)
 
+    # CRIUCHECK
+    def delayed_model_runner_init(self):
+        self.model_runner.delayed_init_attn_backend()
+
+
     def set_gpu_handle(self, gpu_handle) -> None:
         self.gpu_mem_handle = gpu_handle
         if self.gpu_mem_handle!=0:
@@ -203,6 +208,12 @@ class Worker(WorkerBase):
         #                      cache_block_size)
         
         # return num_gpu_blocks, num_cpu_blocks
+        if self.gpu_mem_handle!=0:
+            num_gpu_blocks= self.async_block_manager.get_available_blocks()
+            cache_block_size = self.get_cache_block_size_bytes()
+            num_cpu_blocks = int(self.cache_config.swap_space_bytes //
+                             cache_block_size)
+            return num_gpu_blocks, num_cpu_blocks
 
 
 
@@ -245,6 +256,9 @@ class Worker(WorkerBase):
 
         This also warms up the model, which may record CUDA graphs.
         """
+        if self.gpu_mem_handle!=0:
+            return
+
         raise_if_cache_size_invalid(num_gpu_blocks,
                                     self.cache_config.block_size,
                                     self.model_config.max_model_len)

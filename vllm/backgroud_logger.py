@@ -11,8 +11,9 @@ outputs=[
     # "OPT Layer",
     # "OPT Decoder forward",
     # "OPTAttention forward",
-    "ModelRunner",
+    # "ModelRunner",
     # "Worker ExecuteModel",
+    "AsyncLLMEngine",
 # load
     "LLMENGINE Init",
     "GPUExecuter Init",
@@ -25,6 +26,9 @@ outputs=[
     # "ReuseStore",
     # "Scheduler",
     "XFormers",
+
+# outputs
+    "Outputs",
 ]
 
 class BackgroundFileHandler(BufferingHandler):

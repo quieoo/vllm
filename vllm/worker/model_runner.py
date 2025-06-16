@@ -28,6 +28,7 @@ from vllm.utils import (CudaMemoryProfiler, get_kv_cache_torch_dtype, is_hip,
                         is_pin_memory_available, make_tensor_with_pad)
 import traceback
 from vllm.backgroud_logger import logger as bg_logger
+import os
 
 logger = init_logger(__name__)
 
@@ -118,15 +119,17 @@ class ModelRunner:
         self.graph_block_tables = np.zeros(
             (max(_BATCH_SIZES_TO_CAPTURE), self.get_max_block_per_batch()),
             dtype=np.int32)
-        self.attn_backend = get_attn_backend(
-            self.model_config.get_num_attention_heads(self.parallel_config),
-            self.model_config.get_head_size(),
-            self.model_config.get_num_kv_heads(self.parallel_config),
-            self.model_config.get_sliding_window(),
-            self.model_config.dtype,
-            self.kv_cache_dtype,
-            self.block_size,
-        )
+        
+        if os.environ.get("CRIUDUMP_SOCKET", None) is None:            
+            self.attn_backend = get_attn_backend(
+                self.model_config.get_num_attention_heads(self.parallel_config),
+                self.model_config.get_head_size(),
+                self.model_config.get_num_kv_heads(self.parallel_config),
+                self.model_config.get_sliding_window(),
+                self.model_config.dtype,
+                self.kv_cache_dtype,
+                self.block_size,
+            )
 
         # Create processor for multi-modal data
         if self.vision_language_config is not None:
@@ -145,8 +148,90 @@ class ModelRunner:
         # Set after load_model.
         self.lora_manager: Optional[LRUCacheWorkerLoRAManager] = None
 
+    # CRIUCHECK：
+    # skip attention backend init in __init__, and add the func delayed_init_attn_backend
+    # def __init__(
+    #     self,
+    #     model_config: ModelConfig,
+    #     parallel_config: ParallelConfig,
+    #     scheduler_config: SchedulerConfig,
+    #     device_config: DeviceConfig,
+    #     cache_config: CacheConfig,
+    #     load_config: LoadConfig,
+    #     lora_config: Optional[LoRAConfig],
+    #     kv_cache_dtype: Optional[str] = "auto",
+    #     is_driver_worker: bool = False,
+    #     vision_language_config: Optional[VisionLanguageConfig] = None,
+    # ):
+    #     self.model_config = model_config
+    #     self.parallel_config = parallel_config
+    #     self.scheduler_config = scheduler_config
+    #     self.device_config = device_config
+    #     self.cache_config = cache_config
+    #     self.lora_config = lora_config
+    #     self.load_config = load_config
+    #     self.is_driver_worker = is_driver_worker
+    #     self.vision_language_config = vision_language_config
+
+    #     self.device = self.device_config.device
+    #     self.pin_memory = is_pin_memory_available()
+
+    #     self.kv_cache_dtype = kv_cache_dtype
+    #     self.sliding_window = model_config.get_sliding_window()
+    #     self.block_size = cache_config.block_size
+    #     self.max_seq_len_to_capture = self.model_config.max_seq_len_to_capture
+    #     self.graph_runners: Dict[int, CUDAGraphRunner] = {}
+    #     self.graph_memory_pool: Optional[Tuple[
+    #         int, int]] = None  # Set during graph capture.
+    #     # When using CUDA graph, the input block tables must be padded to
+    #     # max_seq_len_to_capture. However, creating the block table in
+    #     # Python can be expensive. To optimize this, we cache the block table
+    #     # in numpy and only copy the actual input content at every iteration.
+    #     # The shape of the cached block table will be
+    #     # (max batch size to capture, max context len to capture / block size).
+    #     self.graph_block_tables = np.zeros(
+    #         (max(_BATCH_SIZES_TO_CAPTURE), self.get_max_block_per_batch()),
+    #         dtype=np.int32)
+    #     # self.attn_backend = get_attn_backend(
+    #     #     self.model_config.get_num_attention_heads(self.parallel_config),
+    #     #     self.model_config.get_head_size(),
+    #     #     self.model_config.get_num_kv_heads(self.parallel_config),
+    #     #     self.model_config.get_sliding_window(),
+    #     #     self.model_config.dtype,
+    #     #     self.kv_cache_dtype,
+    #     #     self.block_size,
+    #     # )
+
+    #     # Create processor for multi-modal data
+    #     if self.vision_language_config is not None:
+    #         self.multi_modal_input_processor = MULTIMODAL_REGISTRY \
+    #             .create_input_processor(
+    #                 self.model_config,
+    #                 self.vision_language_config,
+    #             )
+    #     else:
+    #         self.multi_modal_input_processor = None
+
+    #     # Lazy initialization
+    #     self.model: nn.Module  # Set after load_model
+    #     # Set if the backend is flashinfer.
+    #     self.flashinfer_workspace_buffer: torch.Tensor
+    #     # Set after load_model.
+    #     self.lora_manager: Optional[LRUCacheWorkerLoRAManager] = None
+    # CRIUCHECK：
+    def delayed_init_attn_backend(self):
+        self.attn_backend = get_attn_backend(
+            self.model_config.get_num_attention_heads(self.parallel_config),
+            self.model_config.get_head_size(),
+            self.model_config.get_num_kv_heads(self.parallel_config),
+            self.model_config.get_sliding_window(),
+            self.model_config.dtype,
+            self.kv_cache_dtype,
+            self.block_size,
+        )
+
     def load_model(self) -> None:
-        with CudaMemoryProfiler() as m:
+        if os.environ.get("CRIUDUMP_SOCKET", None) is not None:
             self.model = get_model(
                 model_config=self.model_config,
                 device_config=self.device_config,
@@ -157,8 +242,34 @@ class ModelRunner:
                 scheduler_config=self.scheduler_config,
                 cache_config=self.cache_config,
             )
+        else:
+            with CudaMemoryProfiler() as m:
+                self.model = get_model(
+                    model_config=self.model_config,
+                    device_config=self.device_config,
+                    load_config=self.load_config,
+                    lora_config=self.lora_config,
+                    vision_language_config=self.vision_language_config,
+                    parallel_config=self.parallel_config,
+                    scheduler_config=self.scheduler_config,
+                    cache_config=self.cache_config,
+                )
+            self.model_memory_usage = m.consumed_memory
 
-        self.model_memory_usage = m.consumed_memory
+        # CRIUCHECK：
+        # disable CudaMemoryProfiler
+        # self.model = get_model(
+        #     model_config=self.model_config,
+        #     device_config=self.device_config,
+        #     load_config=self.load_config,
+        #     lora_config=self.lora_config,
+        #     vision_language_config=self.vision_language_config,
+        #     parallel_config=self.parallel_config,
+        #     scheduler_config=self.scheduler_config,
+        #     cache_config=self.cache_config,
+        # )
+
+        
         # logger.info("Loading model weights took %.4f GB",
         #             self.model_memory_usage / float(2**30))
 

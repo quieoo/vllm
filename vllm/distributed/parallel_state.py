@@ -31,7 +31,7 @@ from torch.distributed import Backend, ProcessGroup
 
 import vllm.envs as envs
 from vllm.logger import init_logger
-
+import os 
 
 @dataclass
 class GraphCaptureContext:
@@ -675,11 +675,15 @@ def model_parallel_is_initialized():
 
 def get_tensor_model_parallel_world_size():
     """Return world size for the tensor model parallel group."""
+    if os.environ.get("CRIUDUMP_SOCKET", None) is not None:
+        return 1
     return get_tp_group().world_size
 
 
 def get_tensor_model_parallel_rank():
     """Return my rank for the tensor model parallel group."""
+    if os.environ.get("CRIUDUMP_SOCKET", None) is not None:
+        return 0
     return get_tp_group().rank_in_group
 
 

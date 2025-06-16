@@ -25,7 +25,8 @@ class AsyncBlockManager:
         t1=time.time()
         allocated_blocks = self.store.allocate_blocks_on_gpu(self.device_id, self.block_size, self.model_path, num_blocks)
         t2=time.time()
-        bg_logger.info(f"[AsyncBlockManager] Need {num_blocks} blocks and Allocated {len(allocated_blocks)}blocks in {t2-t1:.4f} seconds")
+        bg_logger.info(f"[AsyncBlockManager] Need {num_blocks} blocks and Allocated {len(allocated_blocks)}blocks in {(t2-t1)*1000:.4f} ms")
+
         return allocated_blocks
     
     def check_allocate_blocks(self, blocks):

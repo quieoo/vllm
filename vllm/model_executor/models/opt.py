@@ -45,6 +45,8 @@ from vllm.logger import init_logger
 import traceback
 
 from vllm.backgroud_logger import logger
+import os
+from vllm.test_2 import dump_process
 
 # logger = init_logger(__name__)
 
@@ -284,6 +286,19 @@ class OPTDecoder(nn.Module):
         # print("Step 5: final_layer_norm initialization took {:.3f} ms".format((t1 - t0) * 1000))
         logger.info("[OPT Initialize] Step 5: final_layer_norm initialization")
 
+
+        dump_socket=os.environ.get("CRIUDUMP_SOCKET",None)
+        dump_model=os.environ.get("CRIUDUMP_MODEL",None)
+        if dump_socket is not None and dump_model is not None:
+            import xformers
+            print(f"Dump socket: {dump_socket}, dump model: {dump_model}")
+            dump_process(dump_socket, dump_model+"/imgs")
+        # CRIUCheck:
+        # 1. pre-import xformers
+        # 2. dump here
+        # import xformers
+        # dump_process("/mnt/n0/sslm/ServerlessLLM/tools/CRIU/service/criu_service.socket", "/mnt/n0/models/vllm/opt6.7b_tmp/imgs/")
+
         # Step 6: Initialize decoder layers and store them in a ModuleList
         # t0 = time.time()
         self.layers = nn.ModuleList([
@@ -295,7 +310,7 @@ class OPTDecoder(nn.Module):
         logger.info("[OPT Initialize] Step 6: Decoder layers initialization")
 
         total_end = time.time()
-        print("Total initialization time: {:.3f} ms".format((total_end - total_start) * 1000))
+        # print("Total initialization time: {:.3f} ms".format((total_end - total_start) * 1000))
 
     def forward(
         self,

@@ -7,7 +7,7 @@ from vllm.sequence import ExecuteModelRequest, PoolerOutput, SamplerOutput
 from vllm.utils import (get_distributed_init_method, get_ip, get_open_port,
                         make_async)
 from vllm.worker.worker_base import WorkerWrapperBase
-
+import os
 logger = init_logger(__name__)
 from vllm.backgroud_logger import logger as bg_logger
 
@@ -23,10 +23,44 @@ class GPUExecutor(ExecutorBase):
 
         self.driver_worker = self._create_worker()
         bg_logger.info("[GPUExecuter Init] 1 Create worker")
-        self.driver_worker.init_device()
-        bg_logger.info("[GPUExecuter Init] 2 Init device")
-        self.driver_worker.load_model()
-        bg_logger.info("[GPUExecuter Init] 3 Load model")
+
+        if os.environ.get("CRIUDUMP_SOCKET", None) is not None:
+            self.driver_worker.load_model()
+            bg_logger.info("[GPUExecuter Init] 3 Load model")
+
+            self.driver_worker.init_device()
+            bg_logger.info("[GPUExecuter Init] 2 Init device")
+
+            self.driver_worker.delayed_model_runner_init()
+        else:
+
+            self.driver_worker.init_device()
+            bg_logger.info("[GPUExecuter Init] 2 Init device")
+
+            self.driver_worker.load_model()
+            bg_logger.info("[GPUExecuter Init] 3 Load model")
+
+    # CRIUCHECK:
+    # 1. delayed model runner init in create_worker
+    # 2. move load_model infront of init_device
+    # def _init_executor(self) -> None:
+    #     """Initialize the worker and load the model.
+    #     """
+    #     bg_logger.info("[GPUExecuter Init] 0 Start")
+    #     assert self.parallel_config.world_size == 1, (
+    #         "GPUExecutor only supports single GPU.")
+        
+    #     self.driver_worker = self._create_worker()
+    #     bg_logger.info("[GPUExecuter Init] 1 Create worker")
+        
+    #     self.driver_worker.load_model()
+    #     bg_logger.info("[GPUExecuter Init] 3 Load model")
+
+    #     self.driver_worker.init_device()
+    #     bg_logger.info("[GPUExecuter Init] 2 Init device")
+
+    #     # CRIUCHECK
+    #     self.driver_worker.delayed_model_runner_init()
 
     def set_gpu_handle(self, gpu_handle) -> None:
         self.driver_worker.set_gpu_handle(gpu_handle)

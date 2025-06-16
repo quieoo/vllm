@@ -37,7 +37,7 @@ from vllm.model_executor.models.vlm_base import VisionLanguageModelBase
 from vllm.model_executor.utils import set_weight_attrs
 from vllm.utils import is_tpu
 from vllm.backgroud_logger import logger
-
+import time
 # logger = init_logger(__name__)
 
 
@@ -684,7 +684,7 @@ class ServerlessLLMLoader(BaseModelLoader):
             device_id = torch.cuda.current_device()
             device_map = {"": device_id}
             # Note: storage path is already included in the local model path
-            logger.info("[Loader LoadModel] 2 : Start Load Weights")
+            logger.info(f"[Loader LoadModel] 2 : Start Load Weights {time.time()}")
             sllm_state_dict = load_dict(model_path, device_map)
             logger.info("[Loader LoadModel] 3 : Start Moving Weights")
             for key, param in model.named_parameters(recurse=True):

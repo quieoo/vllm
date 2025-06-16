@@ -20,6 +20,9 @@ from vllm.pooling_params import PoolingParams
 from vllm.sampling_params import SamplingParams
 from vllm.sequence import ExecuteModelRequest, SamplerOutput
 from vllm.usage.usage_lib import UsageContext
+from vllm.backgroud_logger import logger as bg_logger
+import time
+
 
 logger = init_logger(__name__)
 ENGINE_ITERATION_TIMEOUT_S = envs.VLLM_ENGINE_ITERATION_TIMEOUT_S
@@ -670,6 +673,7 @@ class AsyncLLMEngine:
             >>> # Process and return the final output
             >>> ...
         """
+        bg_logger.info(f"[AsyncLLMEngine]] Generate request {time.time()}")
         async for output in self._process_request(
                 request_id,
                 inputs,
