@@ -368,7 +368,13 @@ class Worker(WorkerBase):
         broadcast_tensor_dict(data, src=0)
         bg_logger.info("[Worker ExecuteModel] 3 : Broadcast data")
         bg_logger.info(f"[Worker ExecuteModel]: {data}")
-        self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
+        
+        # 为了性能比较的公平，可以注释掉cache_swap操作
+        if self.gpu_mem_handle==0:
+            self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
+        else:
+            # TODO: Implement cache swap with segmented KV Cache
+            bg_logger.info(f"[Worker ExecuteModel] : Cache swap with segmented KV Cache")
         bg_logger.info("[Worker ExecuteModel] 4 : Cache swap")
 
         # If there is no input, we don't need to execute the model.

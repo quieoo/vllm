@@ -12,6 +12,7 @@ class AsyncBlockManager:
         self.store = SllmStoreClient("127.0.0.1:8073")
         self.total_blocks = 0
         self.global_block_table= {}
+        self.free_blocks_list=[]
         bg_logger.info(f"[AsyncBlockManager] Init with block size: {self.block_size}, model path: {self.model_path}, device id: {self.device_id}")
         
     def load_available_block(self):
@@ -47,6 +48,62 @@ class AsyncBlockManager:
                     block_mapping[block]=self.global_block_table[block]
                     used_block_idx+=1
         return block_mapping
+
+    def check_allocate_blocks_v1(self, blocks):
+        block_mapping = {}
+        need_allocate_blocks = []
         
+        # 首先检查已有的映射，收集需要分配的block_id
+        for block in blocks:
+            if block in self.global_block_table:
+                block_mapping[block] = self.global_block_table[block]
+            else:
+                need_allocate_blocks.append(block)
+        
+        if not need_allocate_blocks:
+            return block_mapping
+        
+        # 尝试从free_blocks_list中分配
+        num_need = len(need_allocate_blocks)
+        num_free = len(self.free_blocks_list)
+        num_from_free = min(num_need, num_free)
+        
+        # 从free_blocks_list中取前num_from_free个
+        free_allocated = self.free_blocks_list[:num_from_free]
+        # 剩余的free_blocks_list
+        self.free_blocks_list = self.free_blocks_list[num_from_free:]
+        
+        # 分配free_allocated的块
+        for i in range(num_from_free):
+            block_id = need_allocate_blocks[i]
+            self.global_block_table[block_id] = free_allocated[i]
+            block_mapping[block_id] = free_allocated[i]
+        
+        # 计算还需要分配的数量
+        remaining = num_need - num_from_free
+        if remaining > 0:
+            # 调用allocate_blocks分配剩余的
+            new_allocated = self.allocate_blocks(remaining)
+            for i in range(remaining):
+                block_id = need_allocate_blocks[num_from_free + i]
+                self.global_block_table[block_id] = new_allocated[i]
+                block_mapping[block_id] = new_allocated[i]
+            
+            bg_logger.info(f"[AsyncBlockManager] Allocated {remaining} new blocks from ReuseStore")
+        
+        if num_from_free > 0:
+            bg_logger.info(f"[AsyncBlockManager] Allocated {num_from_free} blocks from free_blocks_list")
+        
+        return block_mapping
+
+    
+    def free_blocks(self, logical_block_ids):
+        # 将物理地址加入free_blocks_list
+        for block in logical_block_ids:
+            if block in self.global_block_table:
+                self.free_blocks_list.append(self.global_block_table[block])
+                # 从映射表中删除
+                del self.global_block_table[block]
+
         
         

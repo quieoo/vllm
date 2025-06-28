@@ -40,9 +40,11 @@ from vllm.utils import Counter
 from vllm.version import __version__ as VLLM_VERSION
 from vllm.backgroud_logger import logger as bg_logger
 import concurrent.futures
-from sllm_store.torch import get_and_open_gpu_pool_handle
+from sllm_store.torch import get_and_open_gpu_pool_handle,set_store_address
 import torch
 import time
+
+
 
 logger = init_logger(__name__)
 _LOCAL_LOGGING_INTERVAL_SEC = 5
@@ -214,7 +216,13 @@ class LLMEngine:
         self.decoding_config = decoding_config or DecodingConfig()
         self.log_stats = log_stats
 
+        # 【ReuseStore】增大KV Cache block size，可以降低RPC KV Block Allocation的频率，提高decode速度
+        # self.cache_config.block_size=32
 
+        if model_config.served_model_name:
+            if "-" in model_config.served_model_name:
+                new_store_address=model_config.served_model_name.split("-")[1]
+                set_store_address(new_store_address)
 
         if not self.model_config.skip_tokenizer_init:
             self.tokenizer = self._init_tokenizer()
