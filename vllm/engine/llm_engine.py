@@ -252,6 +252,7 @@ class LLMEngine:
 
         # 【ReuseStore】获得gpu tenosr pool的基地址
         device_index = device_config.device.index if device_config.device.index is not None else torch.cuda.current_device()
+        print(f"[LLMENGINE Init] Current Device Index: {device_index}")
         gpu_mem_handle = 0
         try:
             gpu_mem_handle = get_and_open_gpu_pool_handle(device_index)
@@ -260,7 +261,7 @@ class LLMEngine:
         if gpu_mem_handle == 0:
             bg_logger.info("[LLMENGINE Init] GPU memory handle is 0, use default Store")
         else:
-            bg_logger.info("[LLMENGINE Init] GPU memory handle is %d, use ReuseStore", gpu_mem_handle)
+            bg_logger.info(f"[LLMENGINE Init] GPU memory handle is {gpu_mem_handle}, use ReuseStore")
         self.model_executor.set_gpu_handle(gpu_mem_handle)
 
         if not self.model_config.embedding_mode:
