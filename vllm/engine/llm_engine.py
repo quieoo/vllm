@@ -217,11 +217,11 @@ class LLMEngine:
         self.log_stats = log_stats
 
         # 【ReuseStore】增大KV Cache block size，可以降低RPC KV Block Allocation的频率，提高decode速度
-        # self.cache_config.block_size=32
+        self.cache_config.block_size=32
 
         if model_config.served_model_name:
-            if "-" in model_config.served_model_name:
-                new_store_address=model_config.served_model_name.split("-")[1]
+            if "--" in model_config.served_model_name:
+                new_store_address=model_config.served_model_name.split("--")[1]
                 set_store_address(new_store_address)
 
         if not self.model_config.skip_tokenizer_init:

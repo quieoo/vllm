@@ -405,6 +405,25 @@ __global__ void reshape_and_cache_segment_kernel(
   const int64_t block_idx = slot_idx / block_size;  // logical block id
   const int64_t block_offset = slot_idx % block_size;
   u_int64_t phy_block_offset = block_tables[block_idx];
+
+  // // 确保内存对齐
+  // const size_t cache_t_size = sizeof(cache_t);
+  // char* base_ptr = (char*)global_memory + phy_block_offset;
+
+  // // 计算layer偏移量
+  // size_t layer_offset = layer_id * num_heads * (head_size / x) * block_size * x * 2;
+  // char* layer_ptr = base_ptr + layer_offset;
+
+  // // 确保指针对齐到cache_t的边界
+  // uintptr_t ptr_value = (uintptr_t)layer_ptr;
+  // if (ptr_value % cache_t_size != 0) {
+  //   ptr_value = ((ptr_value / cache_t_size) + 1) * cache_t_size;
+  //   layer_ptr = (char*)ptr_value;
+  // }
+  
+  // cache_t* block_key_ptr = (cache_t*)layer_ptr;
+  // cache_t* block_value_ptr = block_key_ptr + num_heads * (head_size / x) * block_size * x;
+
   cache_t* block_key_ptr =
       (cache_t*)((char*)global_memory + phy_block_offset) +
       layer_id * num_heads * (head_size / x) * block_size * x * 2;

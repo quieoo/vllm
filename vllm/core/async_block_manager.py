@@ -13,6 +13,10 @@ class AsyncBlockManager:
         self.total_blocks = 0
         self.global_block_table= {}
         self.free_blocks_list=[]
+        print(f"[AsyncBlockManager] Init with block size: {self.block_size}, model path: {self.model_path}, device id: {self.device_id}")
+        # 检查block_size是否能够对齐到16字节
+        if self.block_size % 16 != 0:
+            print(f"[AsyncBlockManager] Block size {self.block_size} is not aligned to 16 bytes")
         bg_logger.info(f"[AsyncBlockManager] Init with block size: {self.block_size}, model path: {self.model_path}, device id: {self.device_id}")
         
     def load_available_block(self):
