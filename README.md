@@ -2,7 +2,7 @@
 A Inference Engine that supports on-demand KV cache allocation during inference.
 
 <p align="center">
-  <img src="ODKV.svg" alt="ODKV" width=55%>
+  <img src="ODKV.svg" alt="ODKV" width=95%>
 </p>
 
 
