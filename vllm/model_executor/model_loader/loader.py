@@ -263,6 +263,7 @@ class DefaultModelLoader(BaseModelLoader):
                 model = _initialize_model(model_config, self.load_config,
                                           lora_config, vision_language_config,
                                           cache_config)
+                print(f"Time begin to load model: {time.time()}")
             model.load_weights(
                 self._get_weights_iterator(model_config.model,
                                            model_config.revision,
@@ -635,6 +636,7 @@ class ServerlessLLMLoader(BaseModelLoader):
                    cache_config: CacheConfig) -> nn.Module:
         from sllm_store.torch import load_dict
         from vllm.distributed import get_tensor_model_parallel_rank
+        from vllm.test_2 import save_dump
         
         assert os.path.isdir(model_config.model)
         
@@ -664,39 +666,67 @@ class ServerlessLLMLoader(BaseModelLoader):
         logger.info(f"[Loader LoadModel] 1 : Start Initialize Model")
         with set_default_torch_dtype(model_config.dtype):
             # with torch.device(device_config.device):
-            with torch.device("cpu"):
-                model = _initialize_model(model_config, self.load_config,
-                                        lora_config, vision_language_config,
-                                        cache_config)
-                model = model.eval()
+            # with torch.device("cpu"):
+            #     model = _initialize_model(model_config, self.load_config,
+            #                             lora_config, vision_language_config,
+            #                             cache_config)
+            #     model = model.eval()
+            def _init_model():
+                with torch.device("cpu"):
+                    model = _initialize_model(model_config, self.load_config,
+                                            lora_config, vision_language_config,
+                                            cache_config)
+                    model = model.eval()
+                    return model
+
+            model = save_dump(_init_model)
+
+            device_id=self._ensure_cuda_ready(1)
             # set all parameters to meta device
             state_dict = self._filter_subtensors(model.state_dict())
-            # print(f"### model loader filter_subtensors: original state_dict size: {len(model.state_dict())}, filtered state_dict size: {len(state_dict)}")
-            # outut:
-                # (VllmBackend pid=3982026) ### model loader filter_subtensors: original state_dict size: 389, filtered state_dict size: 388
             key_list = list(state_dict.keys())
-            
             for key, param in model.named_parameters(recurse=True):
                 if key in key_list:
                     param.data = torch.empty(1, device="cuda")
-            gc.collect()
+            # gc.collect()
             
             device_id = torch.cuda.current_device()
             device_map = {"": device_id}
             # Note: storage path is already included in the local model path
             logger.info(f"[Loader LoadModel] 2 : Start Load Weights {time.time()}")
+            time_before_load=time.time()
             sllm_state_dict = load_dict(model_path, device_map)
+            print(f"[TTFT BREAKDOWN]: Load Time: {time.time()-time_before_load}")
             logger.info("[Loader LoadModel] 3 : Start Moving Weights")
+            if len(key_list) != len(sllm_state_dict.keys()):
+                raise ValueError(
+                    f"key_list and sllm_state_dict keys are not the same!")
             for key, param in model.named_parameters(recurse=True):
                 if key in key_list:
                     tensor = sllm_state_dict[key]
                     param.data = tensor
-                    state_dict.pop(key)
-            if state_dict:
-                raise ValueError(
-                    f"Missing keys {tuple(state_dict)} in loaded state!")
+                    # state_dict.pop(key)            
+            # if state_dict:
+            #     raise ValueError(
+            #         f"Missing keys {tuple(state_dict)} in loaded state!")
         logger.info("[Loader LoadModel] 4 : Finish Load Weights")
         return model
+
+
+    def _ensure_cuda_ready(self, dev) -> int:
+        # dev = getattr(device_config, "device_id", 1)
+        os.environ.setdefault("CUDA_DEVICE_ORDER", "PCI_BUS_ID")
+        os.environ.setdefault("CUDA_VISIBLE_DEVICES", str(dev))
+
+        if not torch.cuda.is_available():
+            raise RuntimeError("CUDA 不可用：请检查容器挂载的 /dev/nvidia* 与驱动")
+
+        # 将当前设备设为你想用的逻辑 id（注意：这里的 id 是相对 CUDA_VISIBLE_DEVICES 的）
+        torch.cuda.set_device(0)
+        props = torch.cuda.get_device_properties(0)
+        # print(f"[GPU READY] name={props.name} cc={props.major}.{props.minor} "
+        #     f"mem={props.total_memory/1e9:.1f}GB")
+        return 0
 
     @staticmethod
     def save_model(
