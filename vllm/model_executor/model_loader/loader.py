@@ -681,7 +681,7 @@ class ServerlessLLMLoader(BaseModelLoader):
 
             model = save_dump(_init_model)
 
-            device_id=self._ensure_cuda_ready(1)
+            device_id=self._ensure_cuda_ready()
             # set all parameters to meta device
             state_dict = self._filter_subtensors(model.state_dict())
             key_list = list(state_dict.keys())
@@ -701,6 +701,17 @@ class ServerlessLLMLoader(BaseModelLoader):
             if len(key_list) != len(sllm_state_dict.keys()):
                 raise ValueError(
                     f"key_list and sllm_state_dict keys are not the same!")
+                    
+            # DEBUG
+            # copy all tensors to CPU
+            # cpu_state_dict = {}
+            # for key, tensor in sllm_state_dict.items():
+            #     cpu_state_dict[key] = tensor.cpu().contiguous()
+            # for key, tensor in cpu_state_dict.items():
+            #     print(f"-------------{key}------------")
+            #     print(tensor)
+
+
             for key, param in model.named_parameters(recurse=True):
                 if key in key_list:
                     tensor = sllm_state_dict[key]
@@ -713,8 +724,17 @@ class ServerlessLLMLoader(BaseModelLoader):
         return model
 
 
-    def _ensure_cuda_ready(self, dev) -> int:
+    def _ensure_cuda_ready(self) -> int:
+        """
+        恢复后识别并选择 GPU。返回选中的 device id。
+        - 若之前做过 monkey-patch，这里不需要特别操作；导入 torch.cuda 即会初始化。
+        - 如需指定卡，优先使用 device_config，否则默认 0。
+        """
+
+        dev=os.getenv("USE_GPU", 0)
         # dev = getattr(device_config, "device_id", 1)
+        # 如果你在 dump 前设置过 CUDA_VISIBLE_DEVICES=""，同进程里恢复后改回去通常也能生效
+        # （因为此时 CUDA 尚未初始化）；为了稳妥，也可以在外层以正确的 env 启动本进程。
         os.environ.setdefault("CUDA_DEVICE_ORDER", "PCI_BUS_ID")
         os.environ.setdefault("CUDA_VISIBLE_DEVICES", str(dev))
 

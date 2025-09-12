@@ -41,12 +41,12 @@ from vllm.model_executor.model_loader.weight_utils import default_weight_loader
 from vllm.model_executor.sampling_metadata import SamplingMetadata
 from vllm.sequence import SamplerOutput
 import time
-from vllm.logger import init_logger
-import traceback
+
+import sys
 
 from vllm.backgroud_logger import logger
 import os
-from vllm.test_2 import dump_process
+from vllm.test_2 import dump_process, save_dump
 
 # logger = init_logger(__name__)
 
@@ -286,12 +286,22 @@ class OPTDecoder(nn.Module):
         # print("Step 5: final_layer_norm initialization took {:.3f} ms".format((t1 - t0) * 1000))
         logger.info("[OPT Initialize] Step 5: final_layer_norm initialization")
 
-        # Step 6: Initialize decoder layers and store them in a ModuleList
-        # t0 = time.time()
         self.layers = nn.ModuleList([
             OPTDecoderLayer(config, cache_config, quant_config)
             for _ in range(config.num_hidden_layers)
         ])
+
+        # def init_layers():
+        #     from vllm.attention.backends.xformers import XFormersBackend
+        #     import xformers
+        #     self.layers = nn.ModuleList([
+        #     OPTDecoderLayer(config, cache_config, quant_config)
+        #     for _ in range(config.num_hidden_layers)
+        #     ])
+        
+        # save_dump(init_layers)
+
+        
         # t1 = time.time()
         # print("Step 6: Decoder layers initialization took {:.3f} ms".format((t1 - t0) * 1000))
         logger.info("[OPT Initialize] Step 6: Decoder layers initialization")

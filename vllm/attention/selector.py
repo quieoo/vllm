@@ -35,6 +35,11 @@ def get_attn_backend(
 ) -> Type[AttentionBackend]:
     """Selects which attention backend to use and lazily imports it."""
 
+    # CRIU: directly return the XFormersBackend
+    from vllm.attention.backends.xformers import (  # noqa: F401
+            XFormersBackend)
+    return XFormersBackend
+
     if is_blocksparse:
         logger.info("Using BlocksparseFlashAttention backend.")
         from vllm.attention.backends.blocksparse_attn import (

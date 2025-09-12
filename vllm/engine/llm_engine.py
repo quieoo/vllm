@@ -218,7 +218,7 @@ class LLMEngine:
 
         # 【ReuseStore】增大KV Cache block size，可以降低RPC KV Block Allocation的频率，提高decode速度
         self.cache_config.block_size=32
-
+        
         if model_config.served_model_name:
             if "--" in model_config.served_model_name:
                 new_store_address=model_config.served_model_name.split("--")[1]
@@ -249,10 +249,8 @@ class LLMEngine:
             load_config=load_config,
         )
         bg_logger.info(f"[LLMENGINE Init] 3 Create Model Executor. Start Init KV Cache {time.time()}")
-
         # 【ReuseStore】获得gpu tenosr pool的基地址
         device_index = device_config.device.index if device_config.device.index is not None else torch.cuda.current_device()
-        print(f"[LLMENGINE Init] Current Device Index: {device_index}")
         gpu_mem_handle = 0
         try:
             gpu_mem_handle = get_and_open_gpu_pool_handle(device_index)
@@ -264,10 +262,12 @@ class LLMEngine:
             bg_logger.info(f"[LLMENGINE Init] GPU memory handle is {gpu_mem_handle}, use ReuseStore")
         self.model_executor.set_gpu_handle(gpu_mem_handle)
 
+        start_kv_init_at = time.time()
         if not self.model_config.embedding_mode:
             self._initialize_kv_caches()
             bg_logger.info("[LLMENGINE Init] 4 Initialize KV Caches")
-        
+        end_kv_init_at = time.time()
+        print(f"[TTFT BREAKDOWN]: Profile KV Init Time: {end_kv_init_at - start_kv_init_at:.4f}")
         # If usage stat is enabled, collect relevant info.
         if is_usage_stats_enabled():
             from vllm.model_executor.model_loader import (
@@ -339,7 +339,6 @@ class LLMEngine:
                     self.get_tokenizer_for_seq,
                 ),
             ))
-        bg_logger.info("[LLMENGINE Init] 9 Create SequenceGroupOutputProcessor")
 
     def _initialize_kv_caches(self) -> None:
         """Initialize the KV cache in the worker(s).

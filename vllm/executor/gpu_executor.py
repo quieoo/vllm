@@ -10,6 +10,7 @@ from vllm.worker.worker_base import WorkerWrapperBase
 import os
 logger = init_logger(__name__)
 from vllm.backgroud_logger import logger as bg_logger
+import time
 
 
 class GPUExecutor(ExecutorBase):
@@ -25,6 +26,8 @@ class GPUExecutor(ExecutorBase):
         bg_logger.info("[GPUExecuter Init] 1 Create worker")
 
         if os.environ.get("CRIUDUMP_SOCKET", None) is not None:
+        
+            print("CRIU DUMP is set")
             self.driver_worker.load_model()
             bg_logger.info("[GPUExecuter Init] 3 Load model")
 
@@ -33,7 +36,6 @@ class GPUExecutor(ExecutorBase):
 
             self.driver_worker.delayed_model_runner_init()
         else:
-
             self.driver_worker.init_device()
             bg_logger.info("[GPUExecuter Init] 2 Init device")
 

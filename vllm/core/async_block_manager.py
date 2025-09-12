@@ -14,9 +14,6 @@ class AsyncBlockManager:
         self.global_block_table= {}
         self.free_blocks_list=[]
         print(f"[AsyncBlockManager] Init with block size: {self.block_size}, model path: {self.model_path}, device id: {self.device_id}")
-        # 检查block_size是否能够对齐到16字节
-        if self.block_size % 16 != 0:
-            print(f"[AsyncBlockManager] Block size {self.block_size} is not aligned to 16 bytes")
         bg_logger.info(f"[AsyncBlockManager] Init with block size: {self.block_size}, model path: {self.model_path}, device id: {self.device_id}")
         
     def load_available_block(self):
@@ -35,23 +32,50 @@ class AsyncBlockManager:
         return allocated_blocks
     
     def check_allocate_blocks(self, blocks):
+        # DEBUG：To be compatible with the vLLM slot mapping, we return a full block mapping (block_id from 0 to current largest block_id)
+        
+        # allocate blocks
         new_block_cnt=0
-        block_mapping={}
+        max_block_id=0
         for block in blocks:
             if block not in self.global_block_table:
                 new_block_cnt+=1
-            else:
-                block_mapping[block]=self.global_block_table[block]
-        allocated_blocks=[]
+            max_block_id=max(max_block_id, block)
+        
         if new_block_cnt>0:
             allocated_blocks=self.allocate_blocks(new_block_cnt)
             used_block_idx=0
             for block in blocks:
                 if block not in self.global_block_table:
                     self.global_block_table[block]=allocated_blocks[used_block_idx]
-                    block_mapping[block]=self.global_block_table[block]
                     used_block_idx+=1
-        return block_mapping
+        
+        full_block_mapping={}
+        for i in range(max_block_id+1):
+            full_block_mapping[i]=self.global_block_table[i]
+        
+        # print(f"[AsyncBlockManager] Block Mapping: {full_block_mapping}")
+        return full_block_mapping        
+
+    # def check_allocate_blocks(self, blocks):
+    #     new_block_cnt=0
+    #     block_mapping={}
+    #     for block in blocks:
+    #         if block not in self.global_block_table:
+    #             new_block_cnt+=1
+    #         else:
+    #             block_mapping[block]=self.global_block_table[block]
+    #     allocated_blocks=[]
+    #     if new_block_cnt>0:
+    #         allocated_blocks=self.allocate_blocks(new_block_cnt)
+    #         used_block_idx=0
+    #         for block in blocks:
+    #             if block not in self.global_block_table:
+    #                 self.global_block_table[block]=allocated_blocks[used_block_idx]
+    #                 block_mapping[block]=self.global_block_table[block]
+    #                 used_block_idx+=1
+    #     print(f"[AsyncBlockManager] Block Mapping: {block_mapping}")
+    #     return block_mapping
 
     def check_allocate_blocks_v1(self, blocks):
         block_mapping = {}

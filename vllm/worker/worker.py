@@ -201,20 +201,21 @@ class Worker(WorkerBase):
         """
         # align with ReuseStore
     #     [2025/6/3] no need any more
-        # free_gpu_memory, total_gpu_memory = torch.cuda.mem_get_info()
-        # cache_block_size = self.get_cache_block_size_bytes()
-        # num_gpu_blocks = int(free_gpu_memory * 0.5 // cache_block_size)
-        # num_cpu_blocks = int(self.cache_config.swap_space_bytes //
-        #                      cache_block_size)
-        
-        # return num_gpu_blocks, num_cpu_blocks
+
         if self.gpu_mem_handle!=0:
             num_gpu_blocks= self.async_block_manager.get_available_blocks()
             cache_block_size = self.get_cache_block_size_bytes()
             num_cpu_blocks = int(self.cache_config.swap_space_bytes //
                              cache_block_size)
             return num_gpu_blocks, num_cpu_blocks
-
+        else:
+            free_gpu_memory, total_gpu_memory = torch.cuda.mem_get_info()
+            cache_block_size = self.get_cache_block_size_bytes()
+            num_gpu_blocks = int(free_gpu_memory * 0.5 // cache_block_size)
+            num_cpu_blocks = int(self.cache_config.swap_space_bytes //
+                                cache_block_size)
+            
+            return num_gpu_blocks, num_cpu_blocks
 
 
         # Profile the memory usage of the model and get the maximum number of
@@ -329,15 +330,24 @@ class Worker(WorkerBase):
                     blocks.extend(block_list)
             # vllm block ids -> global block offsets
             block_mapping=self.async_block_manager.check_allocate_blocks(blocks)
-        
+            # get all values from block_mapping
+            block_addr_list=list(block_mapping.values())
+            # set global_gpu_mem_handle for all sg and segmented_block_tabls for all seq
             for sg_id in range(num_seq_groups):
-                for seq_id, block_table in seq_group_metadata_list[sg_id].block_tables.items():
-                    segmented_block_table = []
-                    for block_id in block_table:
-                        segmented_block_table.append(block_mapping[block_id])
-                    seq_group_metadata_list[sg_id].segmented_block_tables[seq_id] = segmented_block_table
-                seq_group_metadata_list[sg_id].global_gpu_mem_handle = self.gpu_mem_handle
-        
+                seq_group_metadata_list[sg_id].global_gpu_mem_handle=self.gpu_mem_handle
+                for seq_id, _ in seq_group_metadata_list[sg_id].block_tables.items():
+                    seq_group_metadata_list[sg_id].segmented_block_tables[seq_id]=block_addr_list
+            
+            # for sg_id in range(num_seq_groups):
+            #     for seq_id, block_table in seq_group_metadata_list[sg_id].block_tables.items():
+            #         segmented_block_table = []
+            #         for block_id in block_table:
+            #             segmented_block_table.append(block_mapping[block_id])
+            #         seq_group_metadata_list[sg_id].segmented_block_tables[seq_id] = segmented_block_table
+            #     seq_group_metadata_list[sg_id].global_gpu_mem_handle = self.gpu_mem_handle
+    
+
+
         # `blocks_to_swap_in` and `blocks_to_swap_out` are cpu tensors.
         # they contain parameters to launch cudamemcpyasync.
         if(execute_model_req.blocks_to_swap_in is not None):
@@ -369,12 +379,11 @@ class Worker(WorkerBase):
         bg_logger.info("[Worker ExecuteModel] 3 : Broadcast data")
         bg_logger.info(f"[Worker ExecuteModel]: {data}")
         
-        # 为了性能比较的公平，可以注释掉cache_swap操作
-        if self.gpu_mem_handle==0:
-            self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
-        else:
-            # TODO: Implement cache swap with segmented KV Cache
-            bg_logger.info(f"[Worker ExecuteModel] : Cache swap with segmented KV Cache")
+        # if self.gpu_mem_handle==0:
+        #     self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
+        # else:
+        #     # TODO: Implement cache swap with segmented KV Cache
+        #     bg_logger.info(f"[Worker ExecuteModel] : Cache swap with segmented KV Cache")
         bg_logger.info("[Worker ExecuteModel] 4 : Cache swap")
 
         # If there is no input, we don't need to execute the model.
@@ -488,9 +497,15 @@ def raise_if_cache_size_invalid(num_gpu_blocks, block_size,
                          "initializing the engine.")
     max_seq_len = block_size * num_gpu_blocks
     if max_model_len > max_seq_len:
-        raise ValueError(
+        print(
             f"The model's max seq len ({max_model_len}) "
             "is larger than the maximum number of tokens that can be "
             f"stored in KV cache ({max_seq_len}). Try increasing "
             "`gpu_memory_utilization` or decreasing `max_model_len` when "
             "initializing the engine.")
+        # raise ValueError(
+        #     f"The model's max seq len ({max_model_len}) "
+        #     "is larger than the maximum number of tokens that can be "
+        #     f"stored in KV cache ({max_seq_len}). Try increasing "
+        #     "`gpu_memory_utilization` or decreasing `max_model_len` when "
+        #     "initializing the engine.")

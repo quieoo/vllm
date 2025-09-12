@@ -231,7 +231,8 @@ class ModelRunner:
         )
 
     def load_model(self) -> None:
-        if os.environ.get("CRIUDUMP_SOCKET", None) is not None:
+        if True:
+        # if os.environ.get("CRIUDUMP_SOCKET", None) is not None:
             self.model = get_model(
                 model_config=self.model_config,
                 device_config=self.device_config,
@@ -675,7 +676,8 @@ class ModelRunner:
             )
             # 计算最大长度前检查列表是否为空
             if segmented_block_tables:
-                max_seg_block_table_len = max(len(block_table) for block_table in segmented_block_tables)
+                # max_seg_block_table_len = max(len(block_table) for block_table in segmented_block_tables)
+                max_seg_block_table_len=len(segmented_block_tables[0])
                 segmented_block_tables = make_tensor_with_pad(
                     segmented_block_tables,
                     max_len=max_seg_block_table_len,
@@ -687,7 +689,7 @@ class ModelRunner:
                 max_seg_block_table_len = 0
                 # 创建一个空张量
                 segmented_block_tables = torch.tensor([], dtype=torch.int64, device=self.device)
-            # bg_logger.info(f"[ModelRunner] block_tables: {block_tables}, segmented_block_tables: {segmented_block_tables}")
+            # print(f"[ModelRunner] block_tables: {block_tables}, segmented_block_tables: {segmented_block_tables}")
         assert max_query_len > 0, ("query_lens: {}".format(query_lens))
 
         seq_lens_tensor = torch.tensor(seq_lens,
@@ -904,6 +906,9 @@ class ModelRunner:
         else:
             model_executable = self.model
         bg_logger.info("[ModelRunner Execute Model] 2 : Model Executable")
+
+        # print(f"attn_metadata: {attn_metadata}")
+
         hidden_states = model_executable(
             input_ids=input_tokens,
             positions=input_positions,
